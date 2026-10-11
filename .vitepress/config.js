@@ -560,6 +560,7 @@ const fullSidebar = [
     text: "Plans & Licensing",
     items: [
       { text: "Self-hosted Plan Comparison", link: "/overview/self-host-license" },
+      { text: "Monitoring (Beta)", link: "/overview/console-monitoring" },
     ],
   },
   {
@@ -755,7 +756,7 @@ export default withMermaid(
       },
 
       nav: [
-        { text: "Quickstart", link: "/getting-started/quickstart", activeMatch: "^/(overview/(?:$|architecture|deployment-models|self-host-license|contributing|changelog)|getting-started/|migration/|ai/?$)" },
+        { text: "Quickstart", link: "/getting-started/quickstart", activeMatch: "^/(overview/(?:$|architecture|deployment-models|self-host-license|console-monitoring|contributing|changelog)|getting-started/|migration/|ai/?$)" },
         { text: "Web UI", link: "/overview/web-ui", activeMatch: "^/(overview/web-ui|web-ui/)" },
         { text: "MCP", link: "/mcp/", activeMatch: "^/(mcp(?:/|$)|ai/skills(?:/|$))" },
         { text: "Workflows", link: "/writing-workflows/", activeMatch: "^/(writing-workflows/(?!examples(?:/|$))|features/)" },
