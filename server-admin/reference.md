@@ -261,6 +261,10 @@ monitoring:
   retention: "24h"        # How long to keep resource history (default: 24h)
   interval: "5s"          # How often to collect metrics (default: 5s)
 
+# Dagu Console Monitoring (Beta)
+cloud:
+  report: ""              # "off", "health", or "runs"; empty (default) = choose in the web UI
+
 # Git Sync
 git_sync:
   enabled: false
@@ -530,6 +534,9 @@ Legacy YAML keys `scheduler.heartbeat_interval`, `scheduler.heartbeat_sync_inter
 - `DAGU_LICENSE_KEY` - Server key or license key from Dagu Console (`license.key`)
 - `DAGU_LICENSE_CLOUD_URL` - License validation service URL (`license.cloud_url`)
 - `DAGU_LICENSE_SERVER_NAME` - Name that identifies this server in Dagu Console (`license.server_name`; default: the hostname)
+
+### Dagu Console Monitoring (Beta)
+- `DAGU_CLOUD_REPORT` - What the server reports to Dagu Console: `off`, `health`, or `runs` (`cloud.report`; default: empty, which reports nothing until an administrator chooses in the web UI). A set value, `off` included, fixes the level and the web UI shows it read-only. See [Monitoring (Beta)](/overview/console-monitoring).
 
 ### External Secrets
 - `DAGU_SECRETS_VAULT_ADDRESS` - Default Vault server address for the `vault` secret provider
