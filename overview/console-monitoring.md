@@ -174,7 +174,7 @@ During the beta, Dagu Console keeps:
 
 A server that sends no report for 30 days is removed from monitoring, with its daily totals and alerts.
 
-Each workspace stores up to 200 finished runs per UTC day, counted by when Dagu Console records them. Past the limit, runs are still counted in the daily totals and still open and resolve alerts, but they are not listed until 00:00 UTC. Until then:
+Each workspace stores up to 500 finished runs per UTC day, counted by when Dagu Console records them. Past the limit, runs are still counted in the daily totals and still open and resolve alerts, but they are not listed until 00:00 UTC. Until then:
 
 - the console's **Overview** shows **Daily run limit reached** with the time;
 - workspace owners get one email that day;
