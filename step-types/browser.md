@@ -219,6 +219,22 @@ Declared secrets and `ask` answers of four or more characters are replaced with 
 
 The top-level properties each `extract` schema lists become step outputs, readable as `${steps.<id>.outputs.<name>}` and checked when the DAG loads. Fields a schema does not list are dropped. Two extracts in one step cannot list the same property.
 
+A field for the address a link points to needs `format: uri`. The model sees each link as an element id, and only a field with that format gets the link's address in place of the id. Without it the field holds the id, such as `0-11` or `[0-11]`, and the step still succeeds. List the field under `required` too, since some models leave it out otherwise:
+
+```yaml
+schema:
+  type: object
+  properties:
+    listings:
+      type: array
+      items:
+        type: object
+        properties:
+          name: { type: string }
+          link: { type: string, format: uri }
+        required: [name, link]
+```
+
 When the step succeeds with outputs, stdout is one JSON object of them, so `output:` also works. Operation progress is written to the step's stderr log:
 
 ```text
@@ -466,6 +482,7 @@ The step's **Agent** tab shows each operation with its status, token use, screen
 | `the model (...) answered that no element on the page matches the instruction` | The element is not on the page, or the model answers "no match" for every request. | Look at the failure screenshot. If the element is there, [try another model](#model); otherwise reword the instruction or open the right page first. |
 | `act did not complete: ...` | The browser runtime could not perform the action. The message gives its reason. | Look at the failure screenshot; make the instruction more specific, or add a `wait` for the page to settle. |
 | `expectation not met: ...` | An `expect` condition did not hold. | Look at the failure screenshot; fix the act before it, or add `within` when the page needs time to change. |
+| A field holds `0-11` or `[0-11]` instead of an address | The field has no `format: uri`, so it gets the link's element id. | Add `format: uri` to the field and list it under `required`. See [Outputs](#outputs). |
 | `selector "..." did not appear within ...` | A `wait` selector did not become visible. | Check the selector, or raise the operation's `timeout`. |
 | `browser actions need a model` | No `llm` block applies to the step. | Add a DAG-level `llm` block or `with.llm`. |
 | `Chrome installation not found; set CHROME_PATH` | No Chrome or Chromium on the host that runs the step. | Install Chrome, set `CHROME_PATH` or `browser.executable`, or use the `dev` image. |
