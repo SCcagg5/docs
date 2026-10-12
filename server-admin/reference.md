@@ -181,6 +181,7 @@ env_passthrough_prefixes:
 # Browser steps
 browser:
   sandbox: true             # Set false only where Chromium's sandbox cannot start
+  guard_client_certificates: true  # Route other HTTPS through Dagu so the OS never prompts for a certificate (default: on with certificates)
   client_certificates:      # TLS client certificates every browser presents
     - hosts: ["*.corp.example.com"]    # Host, *.domain, or * for every host
       pfx_file: /etc/dagu/certs/device.p12

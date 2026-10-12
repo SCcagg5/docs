@@ -384,6 +384,8 @@ browser:
 
 How it works: Dagu starts a small proxy process next to the browser. The browser sends its HTTPS requests to the certificate hosts through it, and the proxy reaches those sites with the certificate. Every other request goes where it went before. Both follow `browser.proxy` when it is set, otherwise the operating system's proxy settings: the proxy auto-config or the manual proxies on macOS, the Internet Options settings, including automatic detection, on Windows, and `HTTPS_PROXY`, `HTTP_PROXY`, and `NO_PROXY` on Linux.
 
+- While the browser presents certificates, its other HTTPS requests go through the proxy too, presenting no certificate. A site that asks for one therefore fails at once with `<host> asks for a TLS client certificate, and none is configured for it`, instead of the browser waiting on a system prompt. A site that asks and opens anyway is only logged. Set `browser.guard_client_certificates: false` in the [server configuration](/server-admin/reference) to turn this off, or `true` to turn it on for every browser, even without certificates. If the device's proxy asks for a sign-in that Dagu cannot give, such as Windows authentication, the browser reaches the other sites itself, and the step's log says so.
+- An operation that times out names the connections still waiting, such as `still waiting on portal.example.com (TLS handshake with the site for 40s)`.
 - The certificates are read before the browser starts. A wrong passphrase or an unreadable file fails the step at once, naming the entry but never the passphrase.
 - A page that does not load because of a certificate fails the operation with the reason, such as `portal.example.com rejected the client certificate ...: unknown certificate authority`. The step's log lists each host a certificate was presented to.
 - An upstream proxy that asks for credentials cannot carry requests to certificate hosts.
@@ -479,7 +481,7 @@ The step's **Agent** tab shows each operation with its status, token use, screen
 | `download of ... did not finish within ...` | The download ran longer than the longest `act` or `goto` timeout. | Raise the `timeout` of the act that starts it. |
 | `the browser did not respond within ...` | The page stopped responding. | Check the page; raise `timeout` for slow pages. |
 | `browser profile "..." is held by DAG run ..., which is waiting for input` | Another run holds the profile while it waits for an answer. | Answer or cancel that run. |
-| `the site asks for a TLS client certificate (ERR_...)` | The site requires a client certificate and no entry names its host. | Add it to `browser.client_certificates`. See [Client Certificates](#client-certificates). |
+| `<host> asks for a TLS client certificate, and none is configured for it` | The site requires a client certificate and no entry names its host. | Add it to `browser.client_certificates`. See [Client Certificates](#client-certificates). |
 | `... rejected the client certificate ...` | The site refused the certificate presented. | Check that the certificate is the one the site expects and has not expired or been revoked. |
 | `... presented a server certificate that is not trusted ...` | The proxy could not verify the site's server certificate. | Add the site's CA with `ca_file`. |
 | `with.browser.client_certificates[0]: ... passphrase` | The certificate file could not be read with its passphrase. | Check the passphrase secret and the file. |
