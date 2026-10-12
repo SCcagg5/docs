@@ -389,6 +389,7 @@ How it works: Dagu starts a small proxy process next to the browser. The browser
 - An upstream proxy that asks for credentials cannot carry requests to certificate hosts.
 - A Chrome enterprise policy that sets the proxy overrides Dagu's; the error then says so.
 - The proxy, not Chrome, checks the certificate hosts' server certificates. On Linux, add internal CAs with `ca_file`.
+- While a browser runs, any process on the host, including another operating system user's, can use its certificates through the browser's DevTools port or the proxy, both on the loopback interface. Present certificates only on hosts whose users you trust with them.
 
 ## Human Input
 
