@@ -46,6 +46,8 @@ Each run has a permalink to a page that lists its attempts. A run in progress on
 
 ## Alerts
 
+![Open alerts: a server that stopped reporting, a muted workflow's failure, and a failing workflow with when each was emailed](/monitoring/alerts-light.png)
+
 **Open** and **Resolved** alerts, filtered by server. A workflow's alert shows the workflow, the server, when it opened, the last failure, the number of failures, the last run, and the failed steps. A server's [stopped-reporting alert](/overview/console-monitoring-alerts#stopped-reporting-alerts) shows how long the server has been silent, or was.
 
 **Emailed (UTC)** shows when the alert was emailed, or [why it was not](/overview/console-monitoring-alerts#emailed-column).
@@ -53,6 +55,8 @@ Each run has a permalink to a page that lists its attempts. A run in progress on
 Owners see **Alert emails**, which opens the [recipients](/overview/console-monitoring-alerts#who-gets-alert-emails).
 
 ## Insights
+
+![Insights over the last 30 days: runs, failures, and success rate against the previous period, runs per day, success rate, and each workflow with its p95 duration and change](/monitoring/insights-light.png)
 
 **Insights** shows how the workspace's workflows went over the last **7**, **30**, or **90** UTC days, today's runs so far included, against as many days before.
 
@@ -63,6 +67,8 @@ Owners see **Alert emails**, which opens the [recipients](/overview/console-moni
 Filter by **Server** and **Workflow**.
 
 ## Workflow Pages
+
+![A failing workflow's page: its open alert, details, cards with changes against the previous period, and charts of runs per day, success rate, and p50 and p95 duration](/monitoring/workflow-light.png)
 
 A workflow's name in **Insights**, **Runs**, **Alerts**, or a server's **Workflows** tab opens its page:
 

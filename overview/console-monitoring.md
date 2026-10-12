@@ -15,6 +15,8 @@ Connect your Dagu servers to [Dagu Console](https://console.dagu.sh) and see all
 - **Trends**: runs, success rate, and p50 and p95 duration for each workflow over 7, 30, or 90 days.
 - **Nothing sensitive leaves the server**: reporting is opt-in, outbound HTTPS only, and carries metadata. Logs, outputs, parameters, and secrets are [never sent](#never-sent), and each server shows the exact JSON it last sent.
 
+![Dagu Console Overview: two of three servers reporting, failures today, open alerts including a server that stopped reporting, and the 7-day success rate](/monitoring/overview-light.png)
+
 Workflows still run only on your servers. Dagu Console never runs them, and a server does not need the console to run them.
 
 ```text
