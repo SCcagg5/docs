@@ -346,6 +346,10 @@ secrets:
     provider: env
     key: PORTAL_CERT_PASSPHRASE
 
+llm:
+  provider: anthropic
+  model: claude-sonnet-5
+
 steps:
   - id: portal
     action: browser.run
