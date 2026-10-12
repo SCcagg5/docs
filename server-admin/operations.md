@@ -177,6 +177,10 @@ While Dagu waits for runs to clean up:
 
 Give the service manager enough time for the slowest run to clean up: raise `TimeoutStopSec` in the systemd unit, or set `stop_grace_period` in Docker Compose. `docker stop` waits 10 seconds by default.
 
+### Monitoring Across Servers
+
+To see several Dagu servers in one place and get an email when a workflow fails or a server stops reporting, connect them to Dagu Console and turn on [Monitoring](/overview/console-monitoring). The server reports over outbound HTTPS and sends metadata only. Resource monitoring and Prometheus metrics below stay on each server.
+
 ### Resource Monitoring
 
 Dagu provides built-in resource monitoring that tracks CPU, memory, disk, and load average. The data is displayed in the System Status page of the web UI.

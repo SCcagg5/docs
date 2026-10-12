@@ -72,11 +72,26 @@ Unlike temporary workers, these stay up between runs, which is what buys label r
 | Give each run its own compute and hold no capacity between jobs. | Temporary workers |
 | Route Docker, private-network, or data-local steps to hosts you keep running. | Distributed workers |
 
+## Monitoring Across Topologies
+
+Every topology can report to [Dagu Console](/overview/console-monitoring), which shows your servers together and emails you when a workflow fails or a server stops reporting. Several independent servers, such as one per site, each connect to the same workspace and appear side by side.
+
+The always-on Dagu server sends the reports (`dagu server` or `dagu start-all`); workers never report themselves. It reports the runs whose events reach its event store, `paths.event_store_dir`, which defaults to `logs/admin/events` under the Dagu home rather than under the data directory.
+
+| Topology | Runs reported |
+|----------|---------------|
+| **Single server** | Every top-level run. |
+| **Temporary workers** | Runs on temporary workers only when they write to the server's event store directory. Share that directory on the volume, not just the data directory. |
+| **Distributed workers** | Every top-level run: the coordinator records what workers report. A standalone `dagu coordinator` must use the same event store directory as the server. |
+
+Sub-DAG runs are not reported on their own; their top-level run is.
+
 ## Pricing and Licensing Links
 
 - [Community self-host](https://dagu.sh/pricing#self-host): open-source Dagu for self-hosted use.
 - [Team and Pro self-host licenses](https://dagu.sh/pricing#self-host): enterprise controls and more API keys for self-hosted Dagu servers.
 - [License Comparison](/overview/self-host-license): feature comparison for Community, Team, and Pro self-host.
+- [Monitoring (Beta)](/overview/console-monitoring): one view of all your Dagu servers in Dagu Console, with Team and Pro.
 - [Contact](https://dagu.sh/contact): sizing, deployment, or security review questions.
 
 For setup details and operating guides, use:

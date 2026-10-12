@@ -121,6 +121,18 @@ Dagu follows the XDG Base Directory specification for file organization:
         └── .dagu_lock.<hostname@pid>.<timestamp>/
 ```
 
+## Monitoring in Dagu Console (Optional)
+
+A Dagu server can report its health and run status to [Dagu Console](/overview/console-monitoring), which shows every connected server in one place and emails alert recipients. The reporter sits beside the engine, not in its path: workflows run, retry, and finish the same whether or not the console can be reached.
+
+```text
+Scheduler, runs, coordinator ──▶ event store ──▶ reporter ── HTTPS, outbound, every 60 s ──▶ Dagu Console
+```
+
+- The reporter runs in `dagu server` or `dagu start-all`, the process that holds the license. It reads run events from the event store (`paths.event_store_dir`), sends each finished top-level run once, and keeps its place, so after an outage it sends what it missed without duplicates.
+- Reports carry metadata only: health, and at the `runs` level the status and timing of runs and the names of failed steps. Logs, outputs, parameters, and secrets are never sent. See [What Is Sent](/overview/console-monitoring#what-is-sent).
+- Nothing is reported until an administrator chooses a level in the web UI or sets `cloud.report`.
+
 ## Distributed Execution Architecture
 
 Dagu supports distributed execution through a coordinator-worker model. DAG definitions are transmitted to workers via gRPC. Workers return status, logs, artifacts, and persistent-state operations through the coordinator.

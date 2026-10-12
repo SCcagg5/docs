@@ -30,7 +30,7 @@ Dagu server ── HTTPS, outbound, every 60 s ──▶ Dagu Console ──▶ 
 - A Dagu Console workspace on the Team or Pro plan, or in a trial. See [License Comparison](/overview/self-host-license).
 - The server is connected to Dagu Console with a license that checks in: approved from **Plan & features**, activated with `dagu license activate`, or started with a server key. See [Connect a Server](/overview/self-host-license#connect-a-server). Servers with offline licenses do not report.
 - The server can reach `https://console.dagu.sh` over HTTPS.
-- For run status, the [event store](/server-admin/reference#event-store) is enabled. It is by default.
+- For run status, the [event store](/server-admin/reference#event-store) is enabled. It is by default. Runs on temporary workers or under a standalone coordinator are reported only when they write to the server's event store; see [Monitoring Across Topologies](/overview/deployment-models#monitoring-across-topologies).
 
 ## Get Your First Alert
 
@@ -114,7 +114,7 @@ Every report also carries what identifies and authenticates the server, as its l
 - It reports early, within about 5 seconds, when a run fails, is aborted, or is rejected, and when the runs in progress change: a run is queued, starts, begins waiting, or finishes.
 - The first report after Dagu starts waits a random 0 to 60 seconds, so servers started together do not report at once.
 - Reports are outbound HTTPS requests to `https://console.dagu.sh/api/v1/servers/report`. Nothing connects into the server, and no inbound port is opened.
-- The process that holds the license sends the reports: `dagu server` or `dagu start-all`. When several processes share a data directory, one of them reports.
+- The process that holds the license sends the reports: `dagu server` or `dagu start-all`. When several processes share a data directory, each sends its health and one of them sends runs.
 
 If Dagu Console cannot be reached, workflows are not affected. The server keeps its place in the event store, retries with a backoff of up to 5 minutes, and sends the runs it missed once the console is back. Dagu Console stores each finished run once, so a resent report creates no duplicates.
 

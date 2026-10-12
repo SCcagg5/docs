@@ -469,6 +469,16 @@ const fullSidebar = [
     items: [
       { text: "Overview", link: "/server-admin/" },
       {
+        text: "Monitoring (Beta)",
+        link: "/overview/console-monitoring",
+        collapsed: true,
+        items: [
+          { text: "Overview", link: "/overview/console-monitoring" },
+          { text: "Alerts and Email", link: "/overview/console-monitoring-alerts" },
+          { text: "Console Pages", link: "/overview/console-monitoring-pages" },
+        ],
+      },
+      {
         text: "Configuration",
         collapsed: false,
         items: [
@@ -560,16 +570,6 @@ const fullSidebar = [
     text: "Plans & Licensing",
     items: [
       { text: "Self-hosted Plan Comparison", link: "/overview/self-host-license" },
-      {
-        text: "Monitoring (Beta)",
-        link: "/overview/console-monitoring",
-        collapsed: true,
-        items: [
-          { text: "Overview", link: "/overview/console-monitoring" },
-          { text: "Alerts and Email", link: "/overview/console-monitoring-alerts" },
-          { text: "Console Pages", link: "/overview/console-monitoring-pages" },
-        ],
-      },
     ],
   },
   {
@@ -765,13 +765,13 @@ export default withMermaid(
       },
 
       nav: [
-        { text: "Quickstart", link: "/getting-started/quickstart", activeMatch: "^/(overview/(?:$|architecture|deployment-models|self-host-license|console-monitoring|contributing|changelog)|getting-started/|migration/|ai/?$)" },
+        { text: "Quickstart", link: "/getting-started/quickstart", activeMatch: "^/(overview/(?:$|architecture|deployment-models|self-host-license|contributing|changelog)|getting-started/|migration/|ai/?$)" },
         { text: "Web UI", link: "/overview/web-ui", activeMatch: "^/(overview/web-ui|web-ui/)" },
         { text: "MCP", link: "/mcp/", activeMatch: "^/(mcp(?:/|$)|ai/skills(?:/|$))" },
         { text: "Workflows", link: "/writing-workflows/", activeMatch: "^/(writing-workflows/(?!examples(?:/|$))|features/)" },
         { text: "Examples", link: "/writing-workflows/examples/", activeMatch: "^/writing-workflows/examples(?:/|$)" },
         { text: "Actions", link: "/step-types/shell", activeMatch: "^/(step-types|dagu-actions)/" },
-        { text: "Operation", link: "/server-admin/", activeMatch: "^/server-admin(?:/|$)" },
+        { text: "Operation", link: "/server-admin/", activeMatch: "^/(server-admin(?:/|$)|overview/console-monitoring)" },
         { text: "llms.txt", link: "https://raw.githubusercontent.com/dagucloud/dagu/main/llms.txt" },
       ],
 

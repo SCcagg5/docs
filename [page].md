@@ -194,6 +194,14 @@ The `check_services` step starts three `check-endpoint` child runs in parallel, 
 
 Want to explore without installing anything? Open the [live demo](https://dagu-demo-f5e33d0e.dagu.sh/) and sign in with `demouser` / `demouser`.
 
+## Watch every server from one place
+
+Running Dagu on more than one server? Connect them to [Dagu Console](https://console.dagu.sh) and see them together: which servers report, what failed today, open alerts, and run and duration trends for each workflow. You get an email when a workflow fails or a server stops reporting.
+
+![Dagu Console Overview: two of three servers reporting, failures today, open alerts including a server that stopped reporting, and the 7-day success rate](/monitoring/overview-light.png)
+
+Reporting is opt-in, outbound HTTPS only, and metadata only. Logs, outputs, parameters, and secrets never leave your servers, and workflows run the same whether or not the console can be reached. See [Monitoring](/overview/console-monitoring); it needs a Team or Pro plan, or a trial.
+
 ## Why Dagu exists
 
 Most teams that land here are not looking for a workflow platform. Their scripts and containers already work. The scheduler around them is the problem: it takes more time to operate than it saves.
