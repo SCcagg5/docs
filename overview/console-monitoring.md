@@ -18,6 +18,7 @@ Dagu server ── HTTPS, outbound, every 60 s ──▶ Dagu Console ──▶ 
 ## Requirements
 
 - Dagu v2.19.0 or later.
+- A Dagu Console workspace on the Team or Pro plan, or in a trial. See [License Comparison](/overview/self-host-license).
 - The server is connected to Dagu Console with a license that checks in: approved from **Plan & features**, activated with `dagu license activate`, or started with a server key. See [Connect a Server](/overview/self-host-license#connect-a-server). Servers with offline licenses do not report.
 - The server can reach `https://console.dagu.sh` over HTTPS.
 - For run status, the [event store](/server-admin/reference#event-store) is enabled. It is by default.
