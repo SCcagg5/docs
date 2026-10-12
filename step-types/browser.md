@@ -336,6 +336,60 @@ with:
 
 The sign-in acts run only while the login form is showing. Profiles are stored on the host that runs the step. Runs that use the same profile run one at a time. A run fails immediately when another run is waiting for input with the same profile open, or when a [browser session](#building-a-step-in-a-browser-session) holds it.
 
+## Client Certificates
+
+Some sites require a TLS client certificate. Chrome normally takes it from the operating system, which can ask for the certificate's password every time it is used, so the step cannot run unattended. `browser.client_certificates` gives Dagu the certificate instead:
+
+```yaml
+secrets:
+  - name: PORTAL_CERT_PASSPHRASE
+    provider: env
+    key: PORTAL_CERT_PASSPHRASE
+
+steps:
+  - id: portal
+    action: browser.run
+    with:
+      url: https://portal.example.com
+      browser:
+        client_certificates:
+          - hosts: [portal.example.com, "*.corp.example.com"]
+            pfx_file: certs/portal.p12
+            passphrase: ${PORTAL_CERT_PASSPHRASE}
+      do:
+        - expect: {text: Dashboard}
+```
+
+Each entry names:
+
+| Field | Description |
+|-------|-------------|
+| `hosts` | Hosts the certificate is presented to: a host name or IP address, `*.example.com` for the subdomains of `example.com`, or `*` for every host. |
+| `pfx_file` | PKCS#12 (`.pfx` or `.p12`) file with the certificate, its private key, and optionally its chain. |
+| `passphrase` / `passphrase_file` | The `pfx_file` passphrase. Reference a secret rather than writing it in the DAG. |
+| `cert_file`, `key_file` | A PEM certificate (followed by its chain) and its unencrypted private key, instead of `pfx_file`. |
+| `ca_file` | PEM certificates trusted for these hosts' servers, in addition to the system's. |
+
+Relative files resolve against the step's working directory. The first entry whose hosts match a request is used.
+
+To give every browser on a host the same certificate, including [browser sessions](#building-a-step-in-a-browser-session), set it in the [server configuration](/server-admin/reference) with `passphrase_file`; a step's own entries come first:
+
+```yaml
+browser:
+  client_certificates:
+    - hosts: ["*.corp.example.com"]
+      pfx_file: /etc/dagu/certs/device.p12
+      passphrase_file: /etc/dagu/certs/device.passphrase
+```
+
+How it works: Dagu starts a small proxy process next to the browser. The browser sends its HTTPS requests to the certificate hosts through it, and the proxy reaches those sites with the certificate. Every other request goes where it went before. Both follow `browser.proxy` when it is set, otherwise the operating system's proxy settings: the proxy auto-config or the manual proxies on macOS, the Internet Options settings, including automatic detection, on Windows, and `HTTPS_PROXY`, `HTTP_PROXY`, and `NO_PROXY` on Linux.
+
+- The certificates are read before the browser starts. A wrong passphrase or an unreadable file fails the step at once, naming the entry but never the passphrase.
+- A page that does not load because of a certificate fails the operation with the reason, such as `portal.example.com rejected the client certificate ...: unknown certificate authority`. The step's log lists each host a certificate was presented to.
+- An upstream proxy that asks for credentials cannot carry requests to certificate hosts.
+- A Chrome enterprise policy that sets the proxy overrides Dagu's; the error then says so.
+- The proxy, not Chrome, checks the certificate hosts' server certificates. On Linux, add internal CAs with `ca_file`.
+
 ## Human Input
 
 `ask` pauses the step until someone answers in the Web UI:
@@ -403,6 +457,7 @@ The step's **Agent** tab shows each operation with its status, token use, screen
 | `browser.allowed_domains` | Hosts the page's HTTP(S) requests may reach. |
 | `browser.screenshots` | `on_failure`, `final`, `each`, or `never`. |
 | `browser.profile` | Persistent profile name. |
+| `browser.client_certificates` | TLS client certificates and the hosts they are presented to. See [Client Certificates](#client-certificates). |
 
 ## Troubleshooting
 
@@ -423,6 +478,10 @@ The step's **Agent** tab shows each operation with its status, token use, screen
 | `download of ... did not finish within ...` | The download ran longer than the longest `act` or `goto` timeout. | Raise the `timeout` of the act that starts it. |
 | `the browser did not respond within ...` | The page stopped responding. | Check the page; raise `timeout` for slow pages. |
 | `browser profile "..." is held by DAG run ..., which is waiting for input` | Another run holds the profile while it waits for an answer. | Answer or cancel that run. |
+| `the site asks for a TLS client certificate (ERR_...)` | The site requires a client certificate and no entry names its host. | Add it to `browser.client_certificates`. See [Client Certificates](#client-certificates). |
+| `... rejected the client certificate ...` | The site refused the certificate presented. | Check that the certificate is the one the site expects and has not expired or been revoked. |
+| `... presented a server certificate that is not trusted ...` | The proxy could not verify the site's server certificate. | Add the site's CA with `ca_file`. |
+| `with.browser.client_certificates[0]: ... passphrase` | The certificate file could not be read with its passphrase. | Check the passphrase secret and the file. |
 | `ask operations are not supported on Windows` | The browser cannot outlive the step process on Windows. | Run the step on Linux or macOS. |
 
 ## Not Supported Yet

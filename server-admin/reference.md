@@ -181,6 +181,12 @@ env_passthrough_prefixes:
 # Browser steps
 browser:
   sandbox: true             # Set false only where Chromium's sandbox cannot start
+  client_certificates:      # TLS client certificates every browser presents
+    - hosts: ["*.corp.example.com"]    # Host, *.domain, or * for every host
+      pfx_file: /etc/dagu/certs/device.p12
+      passphrase_file: /etc/dagu/certs/device.passphrase
+      # cert_file / key_file: PEM certificate and unencrypted key instead of pfx_file
+      # ca_file: PEM certificates trusted for these hosts' servers
 
 # Queues
 queues:
