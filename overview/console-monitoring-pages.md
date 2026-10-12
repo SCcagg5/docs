@@ -28,7 +28,7 @@ The **Monitoring** group in [Dagu Console](https://console.dagu.sh)'s sidebar ho
 
 Each server's page has these tabs:
 
-- **Overview**: the server's details, such as its ID, Dagu version, OS and architecture, process start, last report, whether [stopped-reporting alerts](/overview/console-monitoring-alerts#stopped-reporting-alerts) are on, and last check-in; the services from the last report; open alerts; and failures in the last 14 days.
+- **Overview**: the server's details, such as its ID, Dagu version, OS and architecture, process start, last report, whether [stopped-reporting alerts](/overview/console-monitoring-alerts#stopped-reporting-alerts) are on, and last check-in; the services from the last report; open alerts; and failures in the last 14 days, or 7 on [free monitoring](/overview/console-monitoring#free-and-paid).
 - **Runs**: the server's runs.
 - **Workflows**: each workflow's finished runs per UTC day over the last 14 days as bars, with runs, failures, success rate, and average and longest duration. **Failing** marks a workflow with an open alert, and **Muted** a [muted](/overview/console-monitoring-alerts#mute-a-workflow) one.
 - **Settings**, for owners: **Alerts**, **Delete reports**, and **Disconnect server**.
@@ -40,7 +40,7 @@ Runs in progress come first, then finished runs, newest recorded first. Filter b
 - **Server**
 - **Workflow**
 - **Status**: Failed (including aborted and rejected), Succeeded (including partially succeeded), Running, Waiting, or Queued
-- Range: **Last hour**, **Last 24 hours** (default), **Last 7 days**, or **Last 14 days**, by when Dagu Console recorded the run
+- Range: **Last hour**, **Last 24 hours** (default), **Last 7 days**, or **Last 14 days**, by when Dagu Console recorded the run. Free monitoring shows up to **Last 7 days**.
 
 Each run has a permalink to a page that lists its attempts. A run in progress on a server that has not reported for 5 minutes shows **Unknown**. A workflow's name opens [its page](#workflow-pages).
 
@@ -58,7 +58,7 @@ Owners see **Alert emails**, which opens the [recipients](/overview/console-moni
 
 ![Insights over the last 30 days: runs, failures, and success rate against the previous period, runs per day, success rate, and each workflow with its p95 duration and change](/monitoring/insights-light.png)
 
-**Insights** shows how the workspace's workflows went over the last **7**, **30**, or **90** UTC days, today's runs so far included, against as many days before.
+**Insights** shows how the workspace's workflows went over the last **7**, **30**, or **90** UTC days, today's runs so far included, against as many days before. Free monitoring offers 7 or 30.
 
 - **Runs**, **Failed**, and **Success**, each with its change against the previous period. A change is shown only when both periods have at least 10 runs.
 - **Runs per day**, succeeded and failed, and **Success rate**. **Show as table** lists the same numbers.
@@ -75,7 +75,7 @@ A workflow's name in **Insights**, **Runs**, **Alerts**, or a server's **Workflo
 - **Details**: the workflow's key, server, last run, open alert, and whether it is muted.
 - Over 7, 30, or 90 UTC days: **Runs**, **Failed**, **Success**, and **p95**, with **Runs per day**, **Success rate**, and **Duration** (p50 and p95) charts.
 - **Recent runs**: the last 10 finished runs. **View all** lists the rest on **Runs**.
-- **Failures by step**: failed, aborted, and rejected runs over the last 14 days, by the step they failed at.
+- **Failures by step**: failed, aborted, and rejected runs over the last 14 days, or 7 on free monitoring, by the step they failed at.
 - For owners: **Mute** or **Unmute**.
 
 Dagu Console counts each day's run durations in ranges, from under a second to 8 hours or more, rather than keeping every duration. p50 and p95 are estimated from those ranges, so they show as approximate (≈), and they are never longer than the longest run. Days before 2026-10-13 (UTC) may have no estimate.

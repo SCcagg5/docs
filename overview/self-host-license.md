@@ -16,7 +16,7 @@ This page compares the Community, Team, and Pro self-host plans. It does not lis
 | Audit logs | - | ✓ | ✓ |
 | Notification routing | ✓ | ✓ | ✓ |
 | Incident routing | - | ✓ | ✓ |
-| Monitoring in Dagu Console (Beta) | - | ✓ | ✓ |
+| Monitoring in Dagu Console (Beta) | △ 1 server, free | ✓ | ✓ |
 
 ## Notes
 
@@ -28,17 +28,17 @@ This page compares the Community, Team, and Pro self-host plans. It does not lis
 - **Audit logs:** review administrative and security-relevant activity.
 - **Notification routing:** send workflow events to team channels.
 - **Incident routing:** open and resolve provider incidents for failed workflows.
-- **Monitoring in Dagu Console (Beta):** see connected servers' health, runs, and trends in one place, and get an email when a workflow fails or a server stops reporting. See [Monitoring (Beta)](/overview/console-monitoring).
+- **Monitoring in Dagu Console (Beta):** see connected servers' health, runs, and trends in one place, and get an email when a workflow fails or a server stops reporting. A Community server can be monitored for free, one per workspace and with lower limits; it stays on Community. See [Free and Paid](/overview/console-monitoring#free-and-paid).
 
 ## Connect a Server
 
-A Team or Pro workspace in [Dagu Console](https://console.dagu.sh) has a number of server slots. Each Dagu server that uses the workspace's license takes one slot, and the console's **Servers** page lists every server with its name, last check-in, and Dagu version. Workers do not take slots.
+A Team or Pro workspace in [Dagu Console](https://console.dagu.sh) has a number of server slots. A workspace without a plan has one, for [free monitoring](/overview/console-monitoring#free-and-paid) on Dagu v2.19.2 or later. Each Dagu server that uses the workspace's license takes one slot, and the console's **Servers** page lists every server with its name, last check-in, and Dagu version. Workers do not take slots.
 
 Connecting shares only the license check-in. To see each server's health and runs in the console and get an email when a workflow fails or the server stops reporting, turn on [Monitoring (Beta)](/overview/console-monitoring) on the server.
 
 ### From the web UI
 
-1. Open **Plan & features** as an administrator and select **Connect to Dagu Console**.
+1. Open **Plan & features** as an administrator and select **Connect to Dagu Console**. On a Community server, **Connect for free** on the **Monitor this server for free** card does the same.
 2. Dagu Console opens in a new tab. Sign in, check that it shows the same code as Dagu, choose the workspace, and approve the server.
 3. Dagu loads the license within a few seconds. The **This server** panel shows the server's name, workspace, last check-in, and a link to the server in Dagu Console.
 

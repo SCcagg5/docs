@@ -1,5 +1,5 @@
 ---
-description: See every self-hosted Dagu server in one place, get an email when a workflow fails or a server stops reporting, and track trends. Opt-in, outbound HTTPS only, metadata only.
+description: See every self-hosted Dagu server in one place, get an email when a workflow fails or a server stops reporting, and track trends. Free for one server. Opt-in, outbound HTTPS only, metadata only.
 ---
 
 # Monitoring (Beta)
@@ -14,6 +14,7 @@ Connect your Dagu servers to [Dagu Console](https://console.dagu.sh) and see all
 - **Alerts by email**: when a workflow fails and when it recovers, and when a server stops reporting, to the members and addresses you choose.
 - **Trends**: runs, success rate, and p50 and p95 duration for each workflow over 7, 30, or 90 days.
 - **Nothing sensitive leaves the server**: reporting is opt-in, outbound HTTPS only, and carries metadata. Logs, outputs, parameters, and secrets are [never sent](#never-sent), and each server shows the exact JSON it last sent.
+- **Free for one server**: a workspace without a plan monitors one server at no cost, with the limits in [Free and Paid](#free-and-paid).
 
 ![Dagu Console Overview: two of three servers reporting, failures today, open alerts including a server that stopped reporting, and the 7-day success rate](/monitoring/overview-light.png)
 
@@ -21,25 +22,43 @@ Workflows still run only on your servers. Dagu Console never runs them, and a se
 
 ```text
 Dagu server ── HTTPS, outbound, every 60 s ──▶ Dagu Console ──▶ Overview, Servers, Runs, Alerts, Insights
+                 (every 5 min on Free)
 (runs workflows)                                            └──▶ alert emails to the workspace's recipients
 ```
 
 ## Requirements
 
-- Dagu v2.19.1 or later.
-- A Dagu Console workspace on the Team or Pro plan, or in a trial. See [License Comparison](/overview/self-host-license).
+- Dagu v2.19.1 or later; v2.19.2 or later for free monitoring.
+- A Dagu Console workspace. Without a plan, it monitors one server for free. On the Team or Pro plan, or in a trial, it monitors as many servers as the plan includes. See [Free and Paid](#free-and-paid) and [License Comparison](/overview/self-host-license).
 - The server is connected to Dagu Console with a license that checks in: approved from **Plan & features**, activated with `dagu license activate`, or started with a server key. See [Connect a Server](/overview/self-host-license#connect-a-server). Servers with offline licenses do not report.
 - The server can reach `https://console.dagu.sh` over HTTPS.
 - For run status, the [event store](/server-admin/reference#event-store) is enabled. It is by default. Runs on temporary workers or under a standalone coordinator are reported only when they write to the server's event store; see [Monitoring Across Topologies](/overview/deployment-models#monitoring-across-topologies).
 
+## Free and Paid
+
+A workspace without a plan or trial monitors one server for free. Free monitoring unlocks no paid Dagu feature: the server stays on Community, so single sign-on, user management, audit logs, incident routing, and more than 2 API keys stay off.
+
+| | Free | Trial, Team, or Pro |
+| --- | --- | --- |
+| Servers | 1 | As many as the plan includes |
+| Dagu version | v2.19.2 or later | v2.19.1 or later |
+| Reports | Every 5 minutes; early reports at most once every 30 seconds | Every 60 seconds; early reports within about 5 seconds |
+| Stopped-reporting alert | After 25 minutes without a report | After 10 minutes without a report |
+| Finished runs stored | 100 per UTC day | 500 per UTC day |
+| Run history shown | 7 days | 14 days |
+| Insights and workflow pages | 7 or 30 days | 7, 30, or 90 days |
+| Alert emails | Owners and admins | Owners, admins, and the members and addresses you add |
+
+Starting a trial or a plan moves the free server onto it. Dagu picks up the new license at its next hourly check-in, or at once with **Check now** on **Plan & features**. When the plan or trial ends, the server returns to free monitoring at its next check-in, provided no other server holds the free slot.
+
 ## Get Your First Alert
 
-1. [Connect the server](/overview/self-host-license#connect-a-server) to Dagu Console from **Plan & features** in Dagu.
+1. [Connect the server](/overview/self-host-license#connect-a-server) to Dagu Console from **Plan & features** in Dagu. In a workspace without a plan, select **Connect for free monitoring** when you approve it.
 2. On the same page, select **Turn on** in the **Monitoring** section, choose **Health and run status (recommended)**, and select **Turn on**.
-3. In Dagu Console, open **Settings**. Under **Alert emails**, owners and admins already get alert emails. Add any other member or address there.
+3. In Dagu Console, open **Settings**. Under **Alert emails**, owners and admins already get alert emails. With a trial or plan, add any other member or address there.
 4. Select **Send test** on a row to check that the email arrives.
 
-Within a minute, the server shows **Reporting** on the console's **Servers** page. From then on, a failed workflow, or a server silent for 10 minutes, emails the recipients. See [Alerts and Email](/overview/console-monitoring-alerts) for who gets what, and [Console Pages](/overview/console-monitoring-pages) for what each page shows.
+Within a minute, or five on free monitoring, the server shows **Reporting** on the console's **Servers** page. From then on, a failed workflow, or a server silent for 10 minutes (25 on free monitoring), emails the recipients. See [Alerts and Email](/overview/console-monitoring-alerts) for who gets what, and [Console Pages](/overview/console-monitoring-pages) for what each page shows.
 
 ## Turn It On
 
@@ -110,8 +129,8 @@ Every report also carries what identifies and authenticates the server, as its l
 
 ## Cadence and Network
 
-- The server reports every 60 seconds.
-- It reports early, within about 5 seconds, when a run fails, is aborted, or is rejected, and when the runs in progress change: a run is queued, starts, begins waiting, or finishes.
+- The server reports every 60 seconds, or every 5 minutes on free monitoring. Dagu Console tells it the interval in each response.
+- It reports early, within about 5 seconds, when a run fails, is aborted, or is rejected, and when the runs in progress change: a run is queued, starts, begins waiting, or finishes. On free monitoring, early reports come at most once every 30 seconds; a report sent sooner is refused with a time to retry, and nothing is lost.
 - The first report after Dagu starts waits a random 0 to 60 seconds, so servers started together do not report at once.
 - Reports are outbound HTTPS requests to `https://console.dagu.sh/api/v1/servers/report`. Nothing connects into the server, and no inbound port is opened.
 - The process that holds the license sends the reports: `dagu server` or `dagu start-all`. When several processes share a data directory, each sends its health and one of them sends runs.
@@ -126,7 +145,7 @@ During the beta, Dagu Console keeps:
 
 | Data | Kept for |
 | --- | --- |
-| Finished runs | 14 days |
+| Finished runs | 14 days, shown for 7 on free monitoring |
 | Daily totals per workflow | 13 months |
 | Resolved alerts | 90 days after they resolve |
 | Open alerts | Until they resolve |
@@ -134,7 +153,7 @@ During the beta, Dagu Console keeps:
 
 A server that sends no report for 30 days is removed from monitoring, with its daily totals and alerts.
 
-Each workspace stores up to 500 finished runs per UTC day, counted by when Dagu Console records them. Past the limit, runs are still counted in the daily totals and still open and resolve alerts, but they are not stored, so they never appear in run lists. Storing resumes at 00:00 UTC. Until then:
+Each workspace stores up to 500 finished runs per UTC day, or 100 on free monitoring, counted by when Dagu Console records them. Past the limit, runs are still counted in the daily totals and still open and resolve alerts, but they are not stored, so they never appear in run lists. Storing resumes at 00:00 UTC. Until then:
 
 - the console's **Overview** shows **Daily run limit reached** with the time;
 - workspace owners get one email that day;
