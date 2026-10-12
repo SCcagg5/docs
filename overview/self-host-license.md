@@ -28,13 +28,13 @@ This page compares the Community, Team, and Pro self-host plans. It does not lis
 - **Audit logs:** review administrative and security-relevant activity.
 - **Notification routing:** send workflow events to team channels.
 - **Incident routing:** open and resolve provider incidents for failed workflows.
-- **Monitoring in Dagu Console (Beta):** see connected servers' health and runs in one place and get an email when a workflow fails. See [Monitoring (Beta)](/overview/console-monitoring).
+- **Monitoring in Dagu Console (Beta):** see connected servers' health, runs, and trends in one place, and get an email when a workflow fails or a server stops reporting. See [Monitoring (Beta)](/overview/console-monitoring).
 
 ## Connect a Server
 
 A Team or Pro workspace in [Dagu Console](https://console.dagu.sh) has a number of server slots. Each Dagu server that uses the workspace's license takes one slot, and the console's **Servers** page lists every server with its name, last check-in, and Dagu version. Workers do not take slots.
 
-Connecting shares only the license check-in. To see each server's health and runs in the console and get an email when a workflow fails, turn on [Monitoring (Beta)](/overview/console-monitoring) on the server.
+Connecting shares only the license check-in. To see each server's health and runs in the console and get an email when a workflow fails or the server stops reporting, turn on [Monitoring (Beta)](/overview/console-monitoring) on the server.
 
 ### From the web UI
 
