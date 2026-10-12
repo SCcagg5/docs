@@ -230,8 +230,8 @@ The degu (*Octodon degus*), a small rodent native to Chile related to chinchilla
     <p>Route workflow events and trigger DAGs from external systems.</p>
   </div>
   <div class="step-card">
-    <h3><a href="/writing-workflows/examples">Workflow examples</a></h3>
-    <p>Start from practical YAML for scripts, data jobs, containers, and operations.</p>
+    <h3><a href="/overview/console-monitoring">Monitoring</a></h3>
+    <p>See every server in one place and get an email when a workflow fails or a server stops reporting.</p>
   </div>
   <div class="step-card">
     <h3><a href="/overview/deployment-models">Deployment models</a></h3>

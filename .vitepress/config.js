@@ -560,7 +560,16 @@ const fullSidebar = [
     text: "Plans & Licensing",
     items: [
       { text: "Self-hosted Plan Comparison", link: "/overview/self-host-license" },
-      { text: "Monitoring (Beta)", link: "/overview/console-monitoring" },
+      {
+        text: "Monitoring (Beta)",
+        link: "/overview/console-monitoring",
+        collapsed: true,
+        items: [
+          { text: "Overview", link: "/overview/console-monitoring" },
+          { text: "Alerts and Email", link: "/overview/console-monitoring-alerts" },
+          { text: "Console Pages", link: "/overview/console-monitoring-pages" },
+        ],
+      },
     ],
   },
   {
