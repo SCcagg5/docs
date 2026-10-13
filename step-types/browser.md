@@ -358,9 +358,16 @@ Some sites require a TLS client certificate. Chrome normally takes it from the o
 
 ```yaml
 secrets:
+  - name: ANTHROPIC_API_KEY
+    provider: env
+    key: ANTHROPIC_API_KEY
   - name: PORTAL_CERT_PASSPHRASE
     provider: env
     key: PORTAL_CERT_PASSPHRASE
+
+llm:
+  provider: anthropic
+  model: claude-sonnet-5
 
 steps:
   - id: portal
