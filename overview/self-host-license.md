@@ -84,6 +84,7 @@ Servers that cannot reach Dagu Console use an offline license. Create one with *
 ## Related Pages
 
 - [Monitoring (Beta)](/overview/console-monitoring)
+- [Dagu Console Account](/overview/console-account)
 - [Builtin Authentication](/server-admin/authentication/builtin)
 - [OIDC Authentication](/server-admin/authentication/oidc)
 - [Audit Logging](/server-admin/server#audit-logging)
