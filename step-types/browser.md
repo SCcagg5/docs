@@ -494,7 +494,7 @@ browser:
       ca_file: /etc/dagu/certs/company-ca.pem
 ```
 
-`ca_file` must contain PEM CA certificates, without private keys. It needs no password. Convert DER certificates to PEM before using them.
+`ca_file` holds PEM CA certificates, or a site's self-signed certificate, without private keys. It needs no password. Text around the certificates, such as openssl's `subject=` lines, is ignored. Convert DER certificates to PEM before using them.
 
 For `hosts`, use hostnames or IP addresses without a scheme, port, or path:
 
@@ -615,7 +615,7 @@ Set `trusted_cas` and `guard_client_certificates` in the host's [config.yaml](/s
 | `browser profile "..." is held by DAG run ..., which is waiting for input` | Another run holds the profile while it waits for an answer. | Answer or cancel that run. |
 | `the site asks for a TLS client certificate (ERR_...)` | The site requires a client certificate and no entry names its host. | Add it to `browser.client_certificates`. See [Client Certificates](#client-certificates). |
 | `... rejected the client certificate ...` | The site refused the certificate presented. | Check that the certificate is the one the site expects and has not expired or been revoked. |
-| `... presented a server certificate that is not trusted ...` | The proxy could not verify the site's server certificate. | Add the site's CA with `ca_file`. |
+| `... presented a server certificate that is not trusted ...` | The proxy could not verify the site's server certificate. | Add the site's CA with [trusted_cas](#trusted-certificate-authorities). |
 | `with.browser.client_certificates[0]: ... passphrase` | The certificate file could not be read with its passphrase. | Check the passphrase secret and the file. |
 | `ask operations are not supported on Windows` | The browser cannot outlive the step process on Windows. | Run the step on Linux or macOS. |
 | `the page has N file inputs; with into, say which one to use` | An `upload` without `into` found several file inputs. | Name the one to use with `into`. |

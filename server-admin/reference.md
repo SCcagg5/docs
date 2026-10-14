@@ -592,7 +592,7 @@ These variables are maintained for backward compatibility but should not be used
 
 `browser.guard_client_certificates` prevents Chrome from asking the user to choose a client certificate. It routes other HTTPS requests through Dagu's proxy without presenting a client certificate. The default is `true` when client certificates are configured. Set it to `false` to disable this behavior.
 
-The guard also trusts CAs from `client_certificates[].ca_file` for other hosts. Use `trusted_cas` to restrict a CA to named hosts. Those hosts always use Dagu's proxy, even with the guard disabled.
+The guard also trusts CAs from `client_certificates[].ca_file` for other hosts. Use `trusted_cas` to restrict a CA to named hosts. Those hosts always use Dagu's proxy, even with the guard disabled. They also keep the system CAs and every `client_certificates[].ca_file`, so an entry only adds trust.
 
 For an HTTPS upstream proxy with a private CA, add a `trusted_cas` entry for the proxy's hostname.
 
