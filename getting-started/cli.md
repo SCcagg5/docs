@@ -740,6 +740,10 @@ dagu browser session open [options] [URL]
 
 The result carries the session `id` the other commands take, the page's `url`, `title`, and `outline`, and `cdp_url`, the browser's DevTools address, where an application can show the page and let a person act on it. Without a model, the session runs only operations that need none.
 
+The browser uses the executing host's `browser.client_certificates` and [`browser.trusted_cas`](/step-types/browser#trusted-certificate-authorities). These settings do not require a model or a running scheduler. Files are read when the browser starts; an existing session keeps its original trust settings.
+
+On engines advertising the `trusted_cas` capability, `open` also returns `tls_verified`. `true` means the certificate proxy verified the final HTTPS page's host. `false` means no such evidence was available; it is not by itself a certificate failure. This field does not prove account sign-in, expected page content, or that any particular configured CA was needed. Inspect `url`, `title`, and `warnings` as well.
+
 #### `browser session do`
 
 Read one operation from stdin, in JSON or YAML, and run it in the session.
@@ -816,6 +820,14 @@ List the host's sessions, oldest first, after closing those idle past their time
 ```bash
 dagu browser session list
 ```
+
+The response contains a `sessions` array. Engines supporting scoped server CA trust also advertise it in `capabilities`, including when no sessions exist:
+
+```json
+{"sessions": [], "capabilities": ["trusted_cas"]}
+```
+
+Check for `"trusted_cas"` before relying on host-level `browser.trusted_cas` or the `open` result's `tls_verified` evidence. An absent capability means the engine needs an update; it does not mean the host has no configured authorities. The capability describes support, not whether any CA is configured or a connection succeeded.
 
 ### `computer check`
 

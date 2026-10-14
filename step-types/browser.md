@@ -459,7 +459,7 @@ Each entry names:
 | `pfx_file` | PKCS#12 (`.pfx` or `.p12`) file with the certificate, its private key, and optionally its chain. |
 | `passphrase` / `passphrase_file` | The `pfx_file` passphrase. Reference a secret rather than writing it in the DAG. |
 | `cert_file`, `key_file` | A PEM certificate (followed by its chain) and its unencrypted private key, instead of `pfx_file`. |
-| `ca_file` | PEM certificates trusted for these hosts' servers, in addition to the system's. |
+| `ca_file` | Additional PEM server authorities. The client-certificate guard also trusts these for other hosts it carries. For host-scoped trust, use [Trusted Certificate Authorities](#trusted-certificate-authorities). |
 
 Relative files resolve against the step's working directory. The first entry whose hosts match a request is used.
 
@@ -473,13 +473,64 @@ browser:
       passphrase_file: /etc/dagu/certs/device.passphrase
 ```
 
-How it works: Dagu starts a small proxy process next to the browser. The browser sends its HTTPS requests to the certificate hosts through it, and the proxy reaches those sites with the certificate. Every other request goes where it went before. Both follow `browser.proxy` when it is set, otherwise the operating system's proxy settings: the proxy auto-config or the manual proxies on macOS, the Internet Options settings, including automatic detection, on Windows, and `HTTPS_PROXY`, `HTTP_PROXY`, and `NO_PROXY` on Linux.
+How it works: Dagu starts a small proxy process next to the browser. The browser sends its HTTPS requests to the certificate hosts through it, and the proxy reaches those sites with the certificate. The proxy follows `browser.proxy` when it is set, otherwise the operating system's proxy settings: the proxy auto-config or the manual proxies on macOS, the Internet Options settings, including automatic detection, on Windows, and `HTTPS_PROXY`, `HTTP_PROXY`, and `NO_PROXY` on Linux.
+
+With client certificates configured, the proxy also carries other HTTPS requests without presenting an identity, preventing unattended browsers from waiting on an operating-system certificate prompt. Set host-level `browser.guard_client_certificates: false` to disable this guard, or `true` to enable it even without client certificates. The guard trusts the system's authorities and each client-certificate entry's `ca_file`; use `browser.trusted_cas` below when additional CA trust must stay scoped to named hosts. If the device's upstream proxy requires authentication, the guard can stop and let unrelated requests use the browser's route. Hosts explicitly named by client certificates or trusted CAs never use that fallback.
 
 - The certificates are read before the browser starts. A wrong passphrase or an unreadable file fails the step at once, naming the entry but never the passphrase.
 - A page that does not load because of a certificate fails the operation with the reason, such as `portal.example.com rejected the client certificate ...: unknown certificate authority`. The step's log lists each host a certificate was presented to.
 - An upstream proxy that asks for credentials cannot carry requests to certificate hosts.
 - A Chrome enterprise policy that sets the proxy overrides Dagu's; the error then says so.
-- The proxy, not Chrome, checks the certificate hosts' server certificates. On Linux, add internal CAs with `ca_file`.
+- The proxy, not Chrome, checks the certificate hosts' server certificates. Add internal CAs with the host-scoped settings below.
+
+## Trusted Certificate Authorities
+
+Use `browser.trusted_cas` in the host's `config.yaml` when a website uses an organization's private CA, including sites that require no client certificate. This verifies the **server's identity**. `client_certificates` authenticates the browser to the server; a site's username, password, or one-time code is a separate sign-in step.
+
+::: info Engine support
+Scoped CA trust requires a build whose [`dagu browser session list`](/getting-started/cli#browser-session-list) response includes `"trusted_cas"` in `capabilities`. If that capability is absent, update Dagu before using this setting.
+:::
+
+```yaml
+# config.yaml on the host that runs the browser
+browser:
+  trusted_cas:
+    - hosts: [portal.example.com, "*.corp.example.com"]
+      ca_file: /etc/dagu/certs/company-ca.pem
+```
+
+| Field | Description |
+|-------|-------------|
+| `hosts` | Required, nonempty list of host names or IP addresses. `*.example.com` covers subdomains but not `example.com` itself. Use exact hosts where possible; `*` trusts the CA for every host. Do not include a URL scheme, port, or path. |
+| `ca_file` | Required file containing one or more CA certificates in PEM format. Private keys, client or server leaf certificates, PKCS#12 files, and other PEM blocks are rejected. No passphrase is needed. Prefer an absolute path readable by the Dagu process. |
+
+The file extension does not determine its encoding. A `.crt` or `.cer` file in DER format must first be converted to PEM, for example:
+
+```bash
+openssl x509 -inform DER -in company-ca.cer -out company-ca.pem
+```
+
+This is a host setting, not a field under a step's `with.browser`. It applies to `browser.run`, `browser.extract`, and browser sessions on that host. It does not change the operating system's trust store or other browsers.
+
+- Every matching CA entry adds to the host's existing trust. Multiple entries may cover the same host, for example during CA rotation. They do not change which client certificate is presented.
+- Redirect targets, subresources, and secure WebSockets use their own destination host's trust. Trusting `portal.example.com` does not trust its sign-in redirect at `login.example.net`.
+- A matching host goes through the certificate proxy even when `guard_client_certificates` is disabled. A failed proxy route does not fall back to a browser route that omits these settings.
+- An HTTPS upstream proxy is verified using CAs matching **the proxy's host name**, separately from the destination site's CAs. Hostname, validity dates, and certificate-chain checks stay enabled.
+- CA files are read when a browser starts. An open browser keeps its trust snapshot until it closes. Restart long-running Dagu services after changing `config.yaml`, and open a new browser to check the change. Keep replaced CA files available to runs that already loaded the earlier configuration.
+
+::: warning Localhost and link-local destinations
+Chrome bypasses PAC routing for `localhost`, `*.localhost`, loopback IP addresses (`127.0.0.0/8`, `::1`), and link-local IP addresses (`169.254.0.0/16`, `fe80::/10`); Windows also bypasses the `loopback` host name. Dagu warns about these scopes. Added trust cannot reach a website opened directly at one of these addresses. Use its regular network host name or a non-loopback, non-link-local address; ordinary private-network IP addresses are supported. An authority scoped to a loopback address can still verify an HTTPS upstream proxy listening there.
+:::
+
+To check a site without a model or a running scheduler:
+
+```bash
+dagu browser session open https://portal.example.com/ --idle-timeout 2m
+# Inspect tls_verified, url, title, and warnings in the JSON result.
+dagu browser session close SESSION_ID --force
+```
+
+Replace `SESSION_ID` with the returned `id`. `tls_verified: true` confirms that the certificate proxy verified the final HTTPS page's host. It does not prove that a particular added CA was needed, that the page contains the expected content, or that account sign-in succeeded. `false` means no verification evidence was available, not necessarily that a certificate failed. The check does not type login details, but configured client certificates may authenticate automatically.
 
 ## Human Input
 
@@ -550,6 +601,8 @@ The step's **Agent** tab shows each operation with its status, token use, screen
 | `browser.profile` | Persistent profile name. |
 | `browser.client_certificates` | TLS client certificates and the hosts they are presented to. See [Client Certificates](#client-certificates). |
 
+`trusted_cas` and `guard_client_certificates` are host-level settings in `config.yaml`, not step-level browser options. See [Trusted Certificate Authorities](#trusted-certificate-authorities).
+
 ## Troubleshooting
 
 | Error | Cause | Fix |
@@ -572,7 +625,10 @@ The step's **Agent** tab shows each operation with its status, token use, screen
 | `browser profile "..." is held by DAG run ..., which is waiting for input` | Another run holds the profile while it waits for an answer. | Answer or cancel that run. |
 | `the site asks for a TLS client certificate (ERR_...)` | The site requires a client certificate and no entry names its host. | Add it to `browser.client_certificates`. See [Client Certificates](#client-certificates). |
 | `... rejected the client certificate ...` | The site refused the certificate presented. | Check that the certificate is the one the site expects and has not expired or been revoked. |
-| `... presented a server certificate that is not trusted ...` | The proxy could not verify the site's server certificate. | Add the site's CA with `ca_file`. |
+| `... certificate signed by unknown authority ...` or `ERR_CERT_AUTHORITY_INVALID` | The server's issuer is not trusted for this host. | Add the organization's CA certificate under host-level `browser.trusted_cas`, including the host named by the error. See [Trusted Certificate Authorities](#trusted-certificate-authorities). |
+| `... certificate has expired or is not yet valid ...` | A certificate in the server's chain is outside its validity period, or the device clock is wrong. | Correct the clock or ask the server administrator to renew the certificate. Adding a CA does not disable validity checks. |
+| `... certificate is valid for ..., not ...` | The requested host does not match the server certificate. | Use the correct hostname or have the server certificate corrected. Adding a CA does not bypass hostname checks. |
+| A trusted CA has no effect for a localhost or link-local URL | Chrome bypasses the certificate proxy for this destination. | Use the site's regular network hostname or a supported network address. See the local-address limitation above. |
 | `with.browser.client_certificates[0]: ... passphrase` | The certificate file could not be read with its passphrase. | Check the passphrase secret and the file. |
 | `ask operations are not supported on Windows` | The browser cannot outlive the step process on Windows. | Run the step on Linux or macOS. |
 | `the page has N file inputs; with into, say which one to use` | An `upload` without `into` found several file inputs. | Name the one to use with `into`. |

@@ -186,7 +186,11 @@ browser:
       pfx_file: /etc/dagu/certs/device.p12
       passphrase_file: /etc/dagu/certs/device.passphrase
       # cert_file / key_file: PEM certificate and unencrypted key instead of pfx_file
-      # ca_file: PEM certificates trusted for these hosts' servers
+      # ca_file: additional server CAs; also trusted by the client-certificate guard
+  guard_client_certificates: true  # Optional; default is on when client certificates exist
+  trusted_cas:              # Server CAs, independent of client identities
+    - hosts: [portal.example.com, "*.corp.example.com"]
+      ca_file: /etc/dagu/certs/company-ca.pem  # PEM CA bundle, no private keys
 
 # Queues
 queues:
@@ -582,6 +586,14 @@ These variables are maintained for backward compatibility but should not be used
 - `DAGU__SUSPEND_FLAGS_DIR` - Use `DAGU_SUSPEND_FLAGS_DIR`
 - `DAGU__ADMIN_LOGS_DIR` - Use `DAGU_ADMIN_LOG_DIR`
 - `DAGU__EVENT_STORE_DIR` - Use `DAGU_EVENT_STORE_DIR`
+
+## Browser Certificate Trust
+
+`browser.trusted_cas` adds server authorities for the listed hosts to every workflow browser and browser session on the executing host. It does not require a client certificate. Entries require a nonempty `hosts` list and a `ca_file` containing only PEM CA certificates without private keys. All matching entries contribute trust; hostname and expiry checks remain enabled. This is a `config.yaml` setting, not a step's `with.browser` option.
+
+Support is advertised by `"trusted_cas"` in the `capabilities` returned by `dagu browser session list`. See [Trusted Certificate Authorities](/step-types/browser#trusted-certificate-authorities) for file formats, host matching, proxy routing, configuration reloads, and Chrome's localhost/link-local limitations.
+
+`browser.guard_client_certificates` controls whether the proxy also carries unrelated HTTPS requests without a client identity. By default it is enabled when client certificates are configured. It does not broaden `trusted_cas` scopes. The older `ca_file` on a `client_certificates` entry also contributes to the guard's trust pool; prefer `trusted_cas` for explicit per-host server trust.
 
 ## Base Configuration
 
