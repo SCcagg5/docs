@@ -699,7 +699,7 @@ dagu dry --no-reuse report-pipeline.yaml
 
 ### `browser cache clear`
 
-Clear the recorded `act` operations that [browser steps](/step-types/browser#replay-cache) replay, so the next run asks the model again.
+Clear the recorded `act` and `upload` operations that [browser steps](/step-types/browser#replay-cache) replay, so the next run asks the model again.
 
 ```bash
 dagu browser cache clear [options] DAG
@@ -751,7 +751,7 @@ echo '{"act": "Click the Sign in button"}' | dagu browser session do [options] I
 **Options:**
 - `--outline-chars` - Most characters of the page outline to report (default: `4000`)
 
-The operation is written as an item of a browser step's `with.do`: `goto`, `act`, `extract`, `expect`, `wait`, or `screenshot`, with `when` and `timeout`. Give the values of the variables an act uses under `variables`:
+The operation is written as an item of a browser step's `with.do`: `goto`, `act`, `upload`, `extract`, `expect`, `wait`, or `screenshot`, with `when` and `timeout`. An upload's relative paths are under the command's working directory. Give the values of the variables an act uses under `variables`:
 
 ```json
 {"act": "Type %password% into the Password field",
@@ -760,9 +760,9 @@ The operation is written as an item of a browser step's `with.do`: `goto`, `act`
 
 A variable given as `{"env": NAME}` is read from the environment on this and every later command of the session, which then need it set, and is masked like a secret in everything the session reports. A plain string serves this command only. Values are never kept.
 
-An element the outline shows with its ID can be acted on by that ID, without the model: `{"click": "0-131"}`, `{"type": {"into": "0-229", "text": "%user%"}}`, or `{"select": {"in": "0-106", "option": "未出荷"}}`, each with `when` and `timeout` as an act takes them. The session keeps each as the act a step writes, such as `Click the "Sign in" button`, reported as `act`, with the action it took as the act's recording.
+An element the outline shows with its ID can be acted on by that ID, without the model: `{"click": "0-131"}`, `{"type": {"into": "0-229", "text": "%user%"}}`, `{"select": {"in": "0-106", "option": "未出荷"}}`, or `{"upload": {"into": "0-57", "files": "/path/to/invoice.pdf"}}`, each with `when` and `timeout` as an act takes them. The session keeps a click, typing, or pick as the act a step writes, such as `Click the "Sign in" button`, reported as `act`, and an upload as the upload into the element in words, such as `the "Receipt" file input`, reported as `into`, with the action it took as its recording.
 
-The result reports the operation's `index` in the session's history, its `status` (`done`, `failed`, or `skipped` when its `when` does not hold), the `actions` an act performed and whether an exported step replays them (`recorded`), what an extract read (`outputs`), saved files, accepted dialogs, blocked requests, `tokens`, and the page the browser is on next with its `outline`. A failed operation exits 1, but the session stays open.
+The result reports the operation's `index` in the session's history, its `status` (`done`, `failed`, or `skipped` when its `when` does not hold), the `actions` an act or upload performed and whether an exported step replays them (`recorded`), what an extract read (`outputs`), saved files, accepted dialogs, blocked requests, `tokens`, and the page the browser is on next with its `outline`. A failed operation exits 1, but the session stays open.
 
 #### `browser session describe`
 
@@ -779,7 +779,7 @@ dagu browser session describe [options] ID
 - `--screenshot` - Also save a screenshot of the page under this name
 - `--format, -f` - `json` (default) or `text`
 
-The outline lists headings, fields with their labels, selects with their choice and options, buttons, checkboxes, links with their addresses, messages, and tables and lists by their columns and rows, the page's own content before the site's header, menus, and footer. Each element `do` can act on shows its ID in brackets, and a link to the page's own site shows its path; a long run of alike rows shows the first three and counts the rest. Text typed into fields is never shown.
+The outline lists headings, fields with their labels, selects with their choice and options, file inputs, buttons, checkboxes, links with their addresses, messages, and tables and lists by their columns and rows, the page's own content before the site's header, menus, and footer. Each element `do` can act on shows its ID in brackets, and a link to the page's own site shows its path; a long run of alike rows shows the first three and counts the rest. Text typed into fields is never shown.
 
 #### `browser session export`
 
@@ -797,7 +797,7 @@ dagu browser session export [options] ID
 - `--close` - Close the session afterwards
 - `--format, -f` - `json` (default), or `yaml` for the step alone
 
-The step holds the operations that succeeded and those skipped because their `when` did not hold, in order; failed operations and screenshots are left out. A variable read from the environment becomes `${NAME}`, which the DAG declares under its secrets; a literal one becomes a parameter of its own name. The acts' recordings are written to the step's replay cache on this host, so its first run replays them without a model request when it meets the pages the session met. A session whose browser has closed can still be exported for a day.
+The step holds the operations that succeeded and those skipped because their `when` did not hold, in order; failed operations and screenshots are left out. A variable read from the environment becomes `${NAME}`, which the DAG declares under its secrets; a literal one becomes a parameter of its own name. The recordings of the acts and uploads are written to the step's replay cache on this host, so its first run replays them without a model request when it meets the pages the session met. Each upload keeps the files the session was given, and export warns about it, until you point `files` at what each run uploads. A session whose browser has closed can still be exported for a day.
 
 #### `browser session close`
 

@@ -4,7 +4,7 @@ description: Automate websites in a local Chrome with browser.run and browser.ex
 
 # Browser
 
-Automate websites that have no API. A browser step drives a local Chrome with natural-language instructions, extracts structured data into step outputs, checks page state, and can pause for a person, for example to enter a one-time code, then continue in the same browser.
+Automate websites that have no API. A browser step drives a local Chrome with natural-language instructions, uploads local files, extracts structured data into step outputs, checks page state, and can pause for a person, for example to enter a one-time code, then continue in the same browser.
 
 Browser steps are powered by the [Stagehand](https://github.com/browserbase/stagehand) Go SDK. Every model request goes through Dagu's own [LLM providers](/step-types/llm/providers), so the step uses the same `llm` configuration as `chat.completion`, and API keys never enter the browser.
 
@@ -104,6 +104,7 @@ steps:
 |-----------|-------|--------|
 | `goto` | URL | Navigate the current tab. |
 | `act` | Instruction, or `{instruction, cache}` | Perform one action described in natural language: click, type, select, scroll, press a key. |
+| `upload` | `{files, into, cache}` | Give local files to a file input. See [Uploads](#uploads). |
 | `extract` | `{instruction, schema}` | Extract data from the page. The schema must be a JSON Schema with `type: object`. |
 | `expect` | [Condition](#conditions) | Fail the step unless the condition holds. |
 | `wait` | `{selector}` or `{duration}` | Wait until a CSS selector is visible, or pause, such as `2s`. |
@@ -203,7 +204,7 @@ steps:
 
 Each model request carries:
 
-- the operation's instruction, or the statement a model-judged condition checks;
+- the operation's instruction, the `into` text of an upload, or the statement a model-judged condition checks;
 - a list of the page's elements with their roles and visible text;
 - the `extract` schema, and for an `act`, the names of the available variables.
 
@@ -211,6 +212,7 @@ Requests never carry:
 
 - the values of `with.variables` or `ask` answers; the model sees `%name%`;
 - what the browser typed into fields;
+- uploaded files;
 - screenshots.
 
 Declared secrets and `ask` answers of four or more characters are replaced with `*******` wherever they appear in a request, including in the page text. Plain variables are not masked, so a value the page displays, such as a signed-in user name, reaches the model unless it comes from a declared secret. Secrets can come from any [secret provider](/writing-workflows/secrets). The model provider's API key only authenticates the request.
@@ -260,6 +262,71 @@ Files the page downloads are saved under `browser/<step id>/downloads/` with the
 
 With `artifacts.enabled: false`, no screenshots are saved, a `screenshot` operation fails, and the browser refuses downloads.
 
+## Uploads
+
+`upload` gives local files to a file input of the page. An `act` cannot upload a file.
+
+```yaml
+llm:
+  provider: anthropic
+  model: claude-sonnet-5
+
+steps:
+  - id: invoices
+    action: mail.search
+    with:
+      mailbox: billing@example.com
+      subject: Invoice
+      has_attachments: true
+      save_attachments: true
+
+  - id: file_box
+    depends: invoices
+    action: browser.run
+    with:
+      url: https://books.example.com/receipts
+      browser:
+        profile: books
+      do:
+        - upload:
+            files: ${steps.invoices.outputs.messages}
+            into: The receipt drop area
+        - expect: {text: Uploaded, within: 1m}
+```
+
+| Field | Description |
+|-------|-------------|
+| `files` | The files to upload. Required. |
+| `into` | The file input, or the button or drop area that opens the file picker, in plain words. Leave it out when the page has only one file input. |
+| `cache` | Set `false` to find the element with the model on every run. Defaults to `true`. |
+
+`files` is a string or a list. Each entry is:
+
+- a path, relative to the step's working directory, or under `~`;
+- a glob pattern, such as `invoices/*.pdf`, whose matches upload in sorted order;
+- several paths or patterns, one per line;
+- an earlier step's output holding a JSON list of paths, of objects with a `path`, or of `mail.search` emails, whose attachments saved with `save_attachments: true` upload.
+
+Each file is uploaded once, in the order named, and can be up to 50 MB. A file that does not exist, a directory, a pattern that matches nothing, or an attachment that was not saved fails the operation before the page is touched.
+
+How the files reach the page:
+
+- Without `into`, the page's only file input gets them, and no model is asked. A page with no file input, or with several, fails the operation and says how many it has.
+- With `into`, the model finds the element once. The step records it and later runs replay it without the model while the page shows the same element, as [acts are replayed](#replay-cache).
+- When the element is a file input, or holds exactly one, such as a drop area, it gets the files directly.
+- Otherwise Dagu clicks the element and gives the files to the file picker the click opens. Dagu intercepts the picker, so no window shows, even with `headless: false`.
+- When the click opens no picker within five seconds, the one file input nearest the element gets the files: the first of its ancestors holding any must hold exactly one.
+
+A file input that takes one file fails the operation when given several, before anything is uploaded. Upload such files one operation at a time, or run the step over the files with `foreach`.
+
+The model sees the `into` text and the page, never the files, their names, or their paths. Sites usually send the files in the background after they get them, so follow an upload with an `expect` on what the site shows when it is done.
+
+The step log shows how the files reached the page:
+
+```text
+[1/2] upload "The receipt drop area" → invoice-0312.pdf through the file picker xpath=/html[1]/body[1]/main[1]/button[2] opened (completed, 1180 tokens, 2.4s)
+```
+
 ## Dialogs
 
 The step accepts every JavaScript dialog a page opens, so a dialog never blocks the page: `alert`, `confirm`, and `beforeunload` are accepted, and a `prompt` is answered with its default text. An act that raises "Are you sure?" therefore goes through. Each accepted dialog appears in the step log and the timeline after the operation that opened it:
@@ -273,10 +340,10 @@ The step accepts every JavaScript dialog a page opens, so a dialog never blocks 
 An `act` records the actions it performed, and the recordings are kept when the step succeeds. The next run of the same step on the same host replays them without asking the model when the operation's position, its instruction, and the page URL (without query or fragment) match. When a replay fails because the page changed, the step asks the model again, records the new actions, and marks the operation `healed` in the log. A recorded element that is gone, or still on the page but hidden, such as a field in a closed dialog, fails the replay.
 
 - Recordings are kept only when the whole step succeeds. When an operation fails on the page after a replay, the step drops the recordings it replayed, so the next run asks the model again. A failure of the model, the browser, a download, or an `ask`, or a canceled run, leaves them.
-- The cache covers `act` only. `extract` and statement conditions call the model on every run. With fixed conditions, a rerun calls the model only for `extract`.
+- The cache covers `act` and `upload`. `extract` and statement conditions call the model on every run. With fixed conditions, a rerun calls the model only for `extract`.
 - A replay clicks the recorded element location. After a layout change it can hit a different element without failing, so follow important acts with an `expect`, preferably a fixed one; when the `expect` fails, the replay is dropped.
-- Disable the cache with `with.cache: false`, or for one operation with `act: {instruction: ..., cache: false}`.
-- `dagu browser session export` writes the recordings of the acts a session ran for a step before its first run; see [Building a Step in a Browser Session](#building-a-step-in-a-browser-session).
+- Disable the cache with `with.cache: false`, or for one operation with `act: {instruction: ..., cache: false}` or `upload: {..., cache: false}`.
+- `dagu browser session export` writes the recordings of the acts and uploads a session ran for a step before its first run; see [Building a Step in a Browser Session](#building-a-step-in-a-browser-session).
 - `dagu browser cache clear <dag>` removes the recordings of every step of a DAG, or of one step with `--step <id>`. The REST API does the same with `DELETE /api/v1/dags/{fileName}/browser-cache`, optionally with `?step=<id>`. Removing all of a DAG's history with `dagu rm --history` also clears them. Each clears only the cache on the host that handles it.
 
 ## Building a Step in a Browser Session
@@ -313,10 +380,11 @@ dagu browser session export ab2cd3ef4g --dag orders --step fetch --format yaml
     - act: Click the Sign in button
 ```
 
-The step holds the operations that succeeded, in the order they ran. Export also writes their act recordings to the step's [replay cache](#replay-cache), so the step's first run on this host replays them without asking the model, and heals as usual when the page changed. Declare `PORTAL_PASSWORD` under the DAG's secrets and give it a parameter `user`.
+The step holds the operations that succeeded, in the order they ran. Export also writes their act and upload recordings to the step's [replay cache](#replay-cache), so the step's first run on this host replays them without asking the model, and heals as usual when the page changed. Declare `PORTAL_PASSWORD` under the DAG's secrets and give it a parameter `user`.
 
 - `do` reads one operation from stdin, written as an item of `with.do`; `ask` is not available. Variable values go under `variables`, never on the command line: `{"env": NAME}` is read from the environment on every command and masked like a secret, and a plain string serves one command.
-- `describe` outlines the page without a model request: headings, fields with their labels, selects with their options, buttons, links with their addresses, and tables and lists, with long runs of alike rows collapsed. Text typed into fields is never shown.
+- `describe` outlines the page without a model request: headings, fields with their labels, selects with their options, file inputs, buttons, links with their addresses, and tables and lists, with long runs of alike rows collapsed. Text typed into fields is never shown.
+- An element the outline shows with its ID can be used without a model: `{"click": ID}`, `{"type": {"into": ID, "text": TEXT}}`, `{"select": {"in": ID, "option": OPTION}}`, or `{"upload": {"into": ID, "files": PATHS}}`. The session keeps each as the act or upload the step writes, with the element as its recording. An upload's relative paths are under the command's working directory, and the exported step uploads the files the session was given until you point `files` at what each run uploads.
 - A session closes its browser when no command arrives for `--idle-timeout` (default `30m`), even with no Dagu server running. Its history can still be exported for a day; `close` removes it at once.
 - A session opened with `--profile` holds the profile: a step naming it fails until the session ends. With `--headed`, the window is visible, and a person can sign in or solve a CAPTCHA in it between commands; the browser's DevTools address in the result lets an application show the page itself.
 - With a profile, the sign-in operations of the exported step run on every run; guard them with `when` as shown in [Profiles](#profiles).
@@ -463,7 +531,7 @@ The step's **Agent** tab shows each operation with its status, token use, screen
 | `do` | Operations to run in order. Required. |
 | `url` | Page opened before the first operation. |
 | `variables` | Values referenced as `%name%` in `act` instructions. |
-| `cache` | Record and replay acts. Defaults to `true`. See [Replay Cache](#replay-cache). |
+| `cache` | Record and replay acts and uploads. Defaults to `true`. See [Replay Cache](#replay-cache). |
 | `browser` | [Browser options](#browser-options). |
 | `llm` | Model configuration that replaces the DAG-level `llm` block. |
 
@@ -507,6 +575,10 @@ The step's **Agent** tab shows each operation with its status, token use, screen
 | `... presented a server certificate that is not trusted ...` | The proxy could not verify the site's server certificate. | Add the site's CA with `ca_file`. |
 | `with.browser.client_certificates[0]: ... passphrase` | The certificate file could not be read with its passphrase. | Check the passphrase secret and the file. |
 | `ask operations are not supported on Windows` | The browser cannot outlive the step process on Windows. | Run the step on Linux or macOS. |
+| `the page has N file inputs; with into, say which one to use` | An `upload` without `into` found several file inputs. | Name the one to use with `into`. |
+| `clicking the element opened no file picker, and no single file input is near it` | The `into` element is not a file input, opens no picker, and has no file input of its own nearby. | Name the file input itself, or the button that opens the picker. Open a menu or dialog with an `act` first when the picker sits behind one. |
+| `the file input takes one file, and the upload gives N` | The input or picker accepts one file. | Upload the files in separate operations, or run the step over them with `foreach`. |
+| `files lists "..." without a path` | A listed attachment was not saved. | Set `save_attachments: true` on the `mail.search` step. |
 
 ## Not Supported Yet
 
