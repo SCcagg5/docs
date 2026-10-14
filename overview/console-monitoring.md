@@ -172,6 +172,7 @@ To raise the limit, [contact the Dagu team](https://dagu.sh/contact).
 - [Alerts and Email](/overview/console-monitoring-alerts)
 - [Console Pages](/overview/console-monitoring-pages)
 - [Connect a Server](/overview/self-host-license#connect-a-server)
+- [Public Webhook URLs](/server-admin/authentication/public-webhook-urls)
 - [Configuration Reference](/server-admin/reference)
 - [Notifications](/web-ui/notifications)
 - [Incident Routing](/web-ui/incidents)

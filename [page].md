@@ -53,7 +53,7 @@ flowchart LR
   </div>
   <div class="overview-card">
     <h3><a href="/web-ui/notifications">Notifications and webhooks</a></h3>
-    <p>Route run events to notification providers and trigger workflows from external systems through per-DAG webhooks.</p>
+    <p>Route run events to notification providers and trigger workflows from external systems through per-DAG webhooks, with <a href="/server-admin/authentication/public-webhook-urls">public URLs</a> for GitHub, Stripe, or Slack even on servers with no public address.</p>
   </div>
   <div class="overview-card">
     <h3><a href="/overview/web-ui">Logs and run history</a></h3>

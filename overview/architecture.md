@@ -133,6 +133,23 @@ Scheduler, runs, coordinator ──▶ event store ──▶ reporter ── HTT
 - Reports carry metadata only: health, and at the `runs` level the status and timing of runs and the names of failed steps. Logs, outputs, parameters, and secrets are never sent. See [What Is Sent](/overview/console-monitoring#what-is-sent).
 - Nothing is reported until an administrator chooses a level in the web UI or sets `cloud.report`.
 
+## Public Webhook URLs through Dagu Cloud (Optional)
+
+A DAG's webhook can have a [public URL](/server-admin/authentication/public-webhook-urls) on `hooks.dagu.sh`, so services on the internet can start the DAG on a server with no public address. Dagu Cloud stores each request; the server takes it over a connection it opens itself.
+
+```text
+Sender ──POST──▶ hooks.dagu.sh ──▶ Dagu Cloud (stores the request, up to 7 days)
+                                        ▲
+                                        │ WebSocket, outbound from the server
+Scheduler (holding the scheduler lock) ─┘ ──▶ checks signature and event ──▶ queue ──▶ run
+```
+
+- The scheduler that holds the scheduler lock holds the connection, so one process per server connects, and it moves with the lock on failover. It connects only while some webhook has a public URL.
+- Each connection starts with a five-minute ticket from Dagu Console, issued with the license's credentials. The ticket also carries how many public URLs the plan allows.
+- Every 10 seconds the scheduler rereads the webhooks and sends Dagu Cloud the set of public URLs when it changes. It sends a set only from a complete read, since Dagu Cloud drops requests waiting for a URL the set leaves out.
+- Each request is checked against the webhook's sender signature and events, then queued as a `webhook` run whose ID is the request's delivery ID, so a request sent twice starts one run. Runs follow the DAG's queue and execution mode, so they can run on workers.
+- Workflows still run only on the server and its workers. Dagu Cloud stores only the SHA-256 of each URL's token and keeps a request only until the server takes it.
+
 ## Distributed Execution Architecture
 
 Dagu supports distributed execution through a coordinator-worker model. DAG definitions are transmitted to workers via gRPC. Workers return status, logs, artifacts, and persistent-state operations through the coordinator.

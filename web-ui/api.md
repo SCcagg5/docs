@@ -3345,7 +3345,13 @@ Webhook management endpoints return the same public webhook object:
   "createdAt": "2026-04-29T10:00:00Z",
   "updatedAt": "2026-04-29T10:15:00Z",
   "createdBy": "user-id",
-  "lastUsedAt": "2026-04-29T10:20:00Z"
+  "lastUsedAt": "2026-04-29T10:20:00Z",
+  "public": {
+    "sender": "github",
+    "secretConfigured": true,
+    "events": ["push", "pull_request.opened"],
+    "createdAt": "2026-04-29T11:00:00Z"
+  }
 }
 ```
 
@@ -3355,6 +3361,7 @@ Notes:
 - `profileSelection.allowedProfiles` lists the runtime profiles callers may select with `X-Dagu-Profile`. An empty list disables caller selection.
 - `profileTokens` lists the webhook's [profile tokens](/server-admin/authentication/webhooks#profile-tokens) without their secrets. `lastUsedAt` is set once a token has authorized a request. Remote nodes running versions without profile tokens omit the field.
 - `lastUsedAt` on the webhook and on each profile token is updated at most once per minute, so it can lag the latest request by up to a minute.
+- `public` is present while the webhook has a [public URL](/server-admin/authentication/public-webhook-urls). `sender` is absent when anyone with the URL may send. The URL itself comes from [Get Public URL](#get-public-url).
 
 ### List All Webhooks
 
@@ -3538,6 +3545,7 @@ Enables or disables the webhook without rotating credentials. Requires developer
 Deletes the webhook configuration. Requires developer, manager, or admin role.
 
 **Response (204)**: No content
+
 ### Example: Using Webhooks
 
 ```bash
@@ -3567,6 +3575,115 @@ curl -X POST http://localhost:8080/api/v1/dags/my-dag/webhook/toggle \
   -H "Content-Type: application/json" \
   -d '{"enabled": false}'
 ```
+
+## Public URL Endpoints
+
+A webhook can have a [public URL](/server-admin/authentication/public-webhook-urls) through Dagu Cloud (Dagu v2.20 or later). These endpoints need builtin auth and a server connected to Dagu Console. Changes are admin-only and written to the audit log; developers and managers can read. All take the `remoteNode` query parameter.
+
+### Get Public URL
+
+**Endpoint**: `GET /api/v1/dags/{fileName}/webhook/public`
+
+Returns the public URL, whether Dagu Cloud holds it, the latest 20 deliveries, and missed counts. Returns `404` when the DAG has no webhook or no public URL.
+
+**Response (200)**:
+```json
+{
+  "url": "https://hooks.dagu.sh/7f3c9a1e5b2d4c8e/q3Vt9dXbVQ7m2YkqRk4fJ8sWnP1aLc6tHe0uGz5yBxA",
+  "state": "active",
+  "maxHooks": 1000,
+  "deliveries": [
+    {
+      "id": "6b1f0c2e-1a5d-4c3e-9f7a-2d8b4e6c1a90",
+      "receivedAt": "2026-04-29T11:05:00Z",
+      "size": 7421,
+      "event": "push",
+      "outcome": "started",
+      "dagRunId": "6b1f0c2e-1a5d-4c3e-9f7a-2d8b4e6c1a90"
+    }
+  ],
+  "missed": { "expired": 0, "refused": 0 }
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `url` | The public URL. Absent until Dagu Cloud has given the server its address. |
+| `state` | `active` once Dagu Cloud holds the URL, `connecting` before then, `overLimit` when the plan allows fewer public URLs than the server has and this one is left out, or `error`. |
+| `error` | Why the server cannot connect, when `state` is `error`. |
+| `maxHooks` | The most public URLs the server's plan allows, once known. |
+| `deliveries[].outcome` | `started`, `waiting` (Dagu Cloud sends it again), `rejected` (signature check failed), `skipped` (an event the webhook does not take), `ignored` (the webhook was disabled), or `failed`. |
+| `deliveries[].error` | Why a delivery was rejected, skipped, waiting, or failed. |
+| `missed` | Requests Dagu Cloud dropped since they were last dismissed: `expired` waited more than 7 days, `refused` arrived while 1,000 were waiting. `since` is when the first was counted. |
+
+### Turn On Public URL
+
+**Endpoint**: `POST /api/v1/dags/{fileName}/webhook/public`
+
+Gives the webhook a public URL. A webhook that has one keeps it. Admin only.
+
+**Response (200)**: the [webhook](#webhook-details-shape), with `public` set.
+
+**Error Responses**: `400` when the server is not connected to Dagu Cloud or the plan allows no more public URLs, `404` when the DAG has no webhook, `501` when encrypted storage is not available.
+
+### Turn Off Public URL
+
+**Endpoint**: `DELETE /api/v1/dags/{fileName}/webhook/public`
+
+Removes the public URL and its delivery list. Dagu Cloud drops the URL and every request waiting for it. Admin only.
+
+**Response (200)**: the [webhook](#webhook-details-shape), without `public`.
+
+### Replace Public URL
+
+**Endpoint**: `POST /api/v1/dags/{fileName}/webhook/public/regenerate`
+
+Gives the webhook a new public URL. The old URL stops working; requests Dagu Cloud already took through it are still delivered. Admin only.
+
+**Response (200)**: the [webhook](#webhook-details-shape).
+
+### Configure Public URL Sender
+
+**Endpoint**: `PUT /api/v1/dags/{fileName}/webhook/public/sender`
+
+Sets whose signature requests must carry, and which events start runs. Admin only.
+
+**Request Body**:
+```json
+{
+  "sender": "github",
+  "secret": "",
+  "generateSecret": false,
+  "events": ["push", "pull_request.opened"]
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `sender` | `github`, `stripe`, `slack`, or `standard`. Omit it to accept anyone with the URL. |
+| `secret` | The sender's signing secret. Empty keeps the stored secret of the same sender, or, for GitHub, makes one. |
+| `generateSecret` | Make a new GitHub signing secret. |
+| `events` | Events that start runs. Empty takes every event. A name also takes the events under it. |
+
+**Response (200)**:
+```json
+{
+  "webhook": { "dagName": "my-dag", "public": { "sender": "github", "secretConfigured": true, "events": ["push"], "createdAt": "2026-04-29T11:00:00Z" } },
+  "secret": "4f9c2b7e0d1a8c3f5e6b9a2d4c7f1e0b8a3d6c9f2e5b8a1d4c7f0e3b6a9d2c5f"
+}
+```
+
+`secret` is present only when Dagu made one, and is shown only this once.
+
+**Error Responses**: `400` for an unknown sender, a missing or malformed secret, or more than 50 events.
+
+### Dismiss Missed Deliveries
+
+**Endpoint**: `DELETE /api/v1/dags/{fileName}/webhook/public/missed`
+
+Clears the missed counts. Admin only.
+
+**Response (204)**: No content
 
 ## Workers Endpoints
 

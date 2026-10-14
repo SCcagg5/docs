@@ -73,7 +73,8 @@ Values are refreshed for each step, so `DAG_RUN_STEP_NAME`, `DAG_RUN_STEP_STDOUT
 | `DAG_PUSHBACK` | Steps re-executed after an approval or human-task push-back only | JSON string containing the current push-back iteration, latest inputs, authenticated actor, server timestamp, and chronological history. Not set on the initial execution. | `{"iteration":2,"by":"reviewer","at":"2026-04-26T06:18:43Z","inputs":{"FEEDBACK":"Tighten summary"},"history":[...]}` |
 | `DAG_PUSHBACK_ITERATION` | Steps re-executed after an approval or human-task push-back only | Current push-back iteration as a plain integer string. Not set on the initial execution. | `2` |
 | `DAG_PUSHBACK_PREVIOUS_STDOUT_FILE` | Rewound steps that had stdout before reset | Absolute path to the previous stdout log for the current step. Dagu passes the path instead of inlining stdout because logs can be large. | `/var/log/dagu/report/draft.stdout.log` |
-| `WEBHOOK_PAYLOAD` | Webhook-triggered runs only | JSON string containing the payload from the webhook request body. Only available when the DAG was triggered via a webhook. | `{"branch":"main","commit":"abc123"}` |
+| `WEBHOOK_PAYLOAD` | Webhook-triggered runs only | JSON string containing the payload from the webhook request body. Only available when the DAG was triggered via a webhook. Left out when the payload does not fit in one environment variable; read `WEBHOOK_PAYLOAD_FILE` instead. | `{"branch":"main","commit":"abc123"}` |
+| `WEBHOOK_PAYLOAD_FILE` | Webhook-triggered runs only (v2.20 or later) | Absolute path to a private file holding the payload. Always set for webhook-triggered runs; the file is removed when the run ends. | `/tmp/dagu-webhook-1234/payload` |
 | `WEBHOOK_HEADERS` | Webhook-triggered runs only | JSON object containing the allow-listed request headers configured by `webhook.forward_headers`. Header names are lowercase and values are arrays of strings. | `{"x-github-event":["push"]}` |
 
 ## Per-Run Work Directory (`DAG_RUN_WORK_DIR`)
@@ -317,6 +318,8 @@ steps:
 - Parse nested payload fields with `jq`, Python, Node.js, or your shell tooling.
 - In shell scripts, read the JSON from `$WEBHOOK_PAYLOAD` instead of inlining it with `${env.WEBHOOK_PAYLOAD}` so payload quotes cannot break the script.
 - Maximum payload size defaults to 1MB and can be changed with `webhooks.max_payload_size` in the server configuration.
+- The payload is also in the file named by `WEBHOOK_PAYLOAD_FILE`. A payload too large for one environment variable, 128 KiB or more on Linux and macOS or more than 32,767 characters on Windows, is passed only as the file, so read the file when payloads may be large.
+- For a [public URL](/server-admin/authentication/public-webhook-urls), `WEBHOOK_PAYLOAD` is the request body exactly as the sender sent it.
 - The variable is empty when the DAG is triggered by other means (scheduler, API, CLI).
 - Always validate the payload contents in your DAG before processing.
 

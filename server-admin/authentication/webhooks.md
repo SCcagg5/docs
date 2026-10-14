@@ -4,6 +4,8 @@ Webhooks let an external caller trigger one specific DAG through `POST /api/v1/w
 
 Webhook management uses the normal authenticated API. Trigger requests use the webhook token instead of API keys or session JWTs.
 
+The trigger endpoint is reachable only where the Dagu server is. To let services on the internet, such as GitHub, Stripe, or Slack, start the DAG on a server with no public address, give the webhook a [public URL](/server-admin/authentication/public-webhook-urls) through Dagu Cloud.
+
 ## Requirements
 
 Webhook management requires builtin auth:
@@ -170,7 +172,9 @@ webhooks:
   max_payload_size: 2097152
 ```
 
-Or with `DAGU_WEBHOOKS_MAX_PAYLOAD_SIZE`. Very large payloads may still exceed operating-system limits because Dagu exposes the payload to steps as environment data.
+Or with `DAGU_WEBHOOKS_MAX_PAYLOAD_SIZE`.
+
+Dagu also writes the payload to a private file and sets `WEBHOOK_PAYLOAD_FILE` to its path (Dagu v2.20 or later). The file is removed when the run ends. A payload too large for one environment variable, 128 KiB or more on Linux and macOS or more than 32,767 characters on Windows, is passed only as the file: `WEBHOOK_PAYLOAD` and `DAG_PARAMS_JSON` leave it out, since a step could not start with it. Read the file when payloads may be large.
 
 If you want to set `dagRunId` without mixing it into `WEBHOOK_PAYLOAD`, use the wrapper form:
 
@@ -195,6 +199,15 @@ steps:
     run: |
       echo "$WEBHOOK_PAYLOAD" | jq .
       echo "$WEBHOOK_PAYLOAD" | jq -r '.branch'
+```
+
+The same step, reading the file instead, works for payloads of any accepted size:
+
+```yaml
+steps:
+  - id: inspect_webhook
+    run: |
+      jq -r '.branch' "$WEBHOOK_PAYLOAD_FILE"
 ```
 
 ## Profile Tokens
@@ -304,6 +317,8 @@ curl -X POST http://localhost:8080/api/v1/dags/my-dag/webhook/profile-tokens \
 curl -X DELETE http://localhost:8080/api/v1/dags/my-dag/webhook/profile-tokens/$TOKEN_ID \
   -H "Authorization: Bearer $ADMIN_TOKEN"
 ```
+
+Give the webhook a public URL through Dagu Cloud (admin only): see [Public Webhook URLs](/server-admin/authentication/public-webhook-urls#api).
 
 Delete the webhook:
 

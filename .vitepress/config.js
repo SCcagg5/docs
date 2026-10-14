@@ -498,6 +498,7 @@ const fullSidebar = [
           { text: "User Management", link: "/server-admin/authentication/user-management" },
           { text: "API Keys", link: "/server-admin/authentication/api-keys" },
           { text: "Webhooks", link: "/server-admin/authentication/webhooks" },
+          { text: "Public Webhook URLs", link: "/server-admin/authentication/public-webhook-urls" },
           { text: "Basic Auth", link: "/server-admin/authentication/basic" },
           { text: "OIDC", link: "/server-admin/authentication/oidc" },
           { text: "Proxy Authentication", link: "/server-admin/authentication/proxy" },

@@ -756,7 +756,7 @@ Or via environment variable:
 export DAGU_WEBHOOKS_MAX_PAYLOAD_SIZE=2097152
 ```
 
-This controls the maximum accepted webhook request body and the serialized payload passed to the DAG as `WEBHOOK_PAYLOAD`. Very large values may still exceed operating-system limits when the payload is passed to executed steps as environment data.
+This controls the maximum accepted webhook request body and the serialized payload passed to the DAG as `WEBHOOK_PAYLOAD`, including requests through a [public URL](/server-admin/authentication/public-webhook-urls). Steps also get the payload as a file named by `WEBHOOK_PAYLOAD_FILE`. A payload too large for one environment variable is passed only as the file. See [Payload Handling](/server-admin/authentication/webhooks#payload-handling).
 
 ## See Also
 

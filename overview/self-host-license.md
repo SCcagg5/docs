@@ -17,6 +17,7 @@ This page compares the Community, Team, and Pro self-host plans. It does not lis
 | Notification routing | ✓ | ✓ | ✓ |
 | Incident routing | - | ✓ | ✓ |
 | Monitoring in Dagu Console (Beta) | △ 1 server, free | ✓ | ✓ |
+| Public webhook URLs through Dagu Cloud | △ 1 per server, with free monitoring | ✓ | ✓ |
 
 ## Notes
 
@@ -29,6 +30,7 @@ This page compares the Community, Team, and Pro self-host plans. It does not lis
 - **Notification routing:** send workflow events to team channels.
 - **Incident routing:** open and resolve provider incidents for failed workflows.
 - **Monitoring in Dagu Console (Beta):** see connected servers' health, runs, and trends in one place, and get an email when a workflow fails or a server stops reporting. A Community server can be monitored for free, one per workspace and with lower limits; it stays on Community. See [Free and Paid](/overview/console-monitoring#free-and-paid).
+- **Public webhook URLs through Dagu Cloud:** give a DAG's webhook an address on the internet, so GitHub, Stripe, or Slack can start it on a server with no public address. A connected server has up to 1,000; a server on free monitoring has one. See [Public Webhook URLs](/server-admin/authentication/public-webhook-urls).
 
 ## Connect a Server
 
@@ -84,6 +86,7 @@ Servers that cannot reach Dagu Console use an offline license. Create one with *
 ## Related Pages
 
 - [Monitoring (Beta)](/overview/console-monitoring)
+- [Public Webhook URLs](/server-admin/authentication/public-webhook-urls)
 - [Dagu Console Account](/overview/console-account)
 - [Builtin Authentication](/server-admin/authentication/builtin)
 - [OIDC Authentication](/server-admin/authentication/oidc)

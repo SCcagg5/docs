@@ -86,12 +86,25 @@ The always-on Dagu server sends the reports (`dagu server` or `dagu start-all`);
 
 Sub-DAG runs are not reported on their own; their top-level run is.
 
+## Public Webhook URLs Across Topologies
+
+[Public webhook URLs](/server-admin/authentication/public-webhook-urls) work in every topology. The scheduler holds the connection to Dagu Cloud, so a server needs a running scheduler: `dagu start-all`, or `dagu scheduler` beside `dagu server`. With several schedulers for high availability, only the one holding the scheduler lock connects.
+
+| Topology | Where webhook runs execute |
+|----------|----------------------------|
+| **Single server** | On the server. |
+| **Temporary workers** | On a temporary worker, like any queued run. |
+| **Distributed workers** | Wherever the DAG's worker selector routes it. The worker writes `WEBHOOK_PAYLOAD_FILE` locally, so the payload file works there too. |
+
+Only the scheduler needs outbound HTTPS to `relay.dagu.sh` and `console.dagu.sh`. Workers need nothing extra.
+
 ## Pricing and Licensing Links
 
 - [Community self-host](https://dagu.sh/pricing#self-host): open-source Dagu for self-hosted use.
 - [Team and Pro self-host licenses](https://dagu.sh/pricing#self-host): enterprise controls and more API keys for self-hosted Dagu servers.
 - [License Comparison](/overview/self-host-license): feature comparison for Community, Team, and Pro self-host.
 - [Monitoring (Beta)](/overview/console-monitoring): one view of all your Dagu servers in Dagu Console, with Team and Pro.
+- [Public Webhook URLs](/server-admin/authentication/public-webhook-urls): start DAGs from GitHub, Stripe, or Slack on servers with no public address.
 - [Contact](https://dagu.sh/contact): sizing, deployment, or security review questions.
 
 For setup details and operating guides, use:
