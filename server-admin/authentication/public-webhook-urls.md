@@ -137,7 +137,7 @@ Dagu Cloud drops a request that waits more than 7 days, and refuses requests whi
 - **New URL** makes a new token. The old URL stops working at once. Requests Dagu Cloud already took through it are still delivered.
 - Turning the URL off removes it, drops every request waiting for it, and clears its delivery list. Turning it on again makes a new URL.
 - Deleting the webhook or the DAG also removes the URL.
-- Renaming the DAG keeps its webhook and URL. Requests waiting at Dagu Cloud under the old name are dropped.
+- Renaming the DAG keeps its webhook, its URL, and the requests waiting for it.
 
 Changes take effect within about 10 seconds. If the scheduler is stopped, they take effect when it starts again.
 
