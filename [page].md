@@ -188,9 +188,9 @@ flowchart TD
 
 The `check_services` step starts three `check-endpoint` child runs in parallel, each with its own status, logs, and retry history. The `summarize` step waits for all three and reports the result.
 
-## See the Web UI
+## See Dagu in Action
 
-<video src="/cockpit-demo.mp4" poster="/cockpit-demo-poster.jpg" controls preload="none" playsinline aria-label="Dagu Cockpit demo" style="width: 100%; border-radius: 12px; margin: 8px 0 24px;"></video>
+<video src="/dagu-film.mp4" poster="/dagu-film-poster.jpg" controls preload="none" playsinline aria-label="Dagu film: your code is the engine, Dagu is the cockpit" style="width: 100%; border-radius: 12px; margin: 8px 0 24px;"></video>
 
 Want to explore without installing anything? Open the [live demo](https://dagu-demo-f5e33d0e.dagu.sh/) and sign in with `demouser` / `demouser`.
 
