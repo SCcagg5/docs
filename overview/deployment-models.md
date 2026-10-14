@@ -17,13 +17,19 @@ Each topology below uses its own diagram so the labels stay readable in the docs
 
 ### Single server
 
-<img src="/deployment-models/local.gif" alt="Local single-server Dagu deployment with the Web UI, API, scheduler, executor, and persistent volume on one host." style="width: 100%; border-radius: 8px; border: 1px solid var(--vp-c-divider); margin: 16px 0 24px;" />
+<picture>
+  <source media="(max-width: 640px)" srcset="/deployment-models/single-server-portrait.svg" width="480" height="610">
+  <img src="/deployment-models/single-server.svg" width="720" height="450" alt="Single server: one machine runs dagu start-all; the Dagu server runs your steps and writes DAGs, run history, and logs to local files." style="width: 100%; height: auto; margin: 16px 0 24px;">
+</picture>
 
 Use this model when one machine is enough. `dagu start-all` runs the Web UI, scheduler, and execution engine in one process. History and logs stay on the same machine by default.
 
 ### Temporary workers
 
-<img src="/deployment-models/shared-volume.gif" alt="Deployment model where a launcher provisions a temporary worker for each run, the worker runs the Dagu binary and writes state to a shared volume before being destroyed, and an always-on Dagu server reads that state." style="width: 100%; border-radius: 8px; border: 1px solid var(--vp-c-divider); margin: 16px 0 24px;" />
+<picture>
+  <source media="(max-width: 640px)" srcset="/deployment-models/temporary-workers-portrait.svg" width="480" height="712">
+  <img src="/deployment-models/temporary-workers.svg" width="720" height="450" alt="Temporary workers: your launcher starts a temporary worker that runs dagu start and writes state to a shared volume; the always-on Dagu server reads the same volume, with no network path between the two." style="width: 100%; height: auto; margin: 16px 0 24px;">
+</picture>
 
 Use this model when each run should get its own compute, provisioned on demand and destroyed once the run finishes. Your platform starts a container or job that runs the binary and exits:
 
@@ -50,7 +56,10 @@ Because a worker exists only while its run is in flight, execution capacity fall
 
 ### Distributed workers
 
-<img src="/deployment-models/self-hosted.gif" alt="Distributed-worker deployment where the Dagu server dispatches tasks into a coordinator and workers on separate hosts poll it over gRPC, reporting status and logs back, with the server and persistent volume sharing the same data." style="width: 100%; border-radius: 8px; border: 1px solid var(--vp-c-divider); margin: 16px 0 24px;" />
+<picture>
+  <source media="(max-width: 640px)" srcset="/deployment-models/distributed-workers-portrait.svg" width="480" height="648">
+  <img src="/deployment-models/distributed-workers.svg" width="720" height="450" alt="Distributed workers: workers on your hosts poll the coordinator in the Dagu server over outbound gRPC, so they need no inbound port; the server writes status, logs, and artifacts to Dagu data." style="width: 100%; height: auto; margin: 16px 0 24px;">
+</picture>
 
 Use this model when execution should sit on hosts you keep running and pick by label. The server dispatches tasks into a coordinator; workers connect outbound over gRPC, poll for tasks matching their labels, and report status, logs, and artifacts back. Nothing is pushed to a worker, so workers need no inbound port.
 
@@ -75,6 +84,11 @@ Unlike temporary workers, these stay up between runs, which is what buys label r
 ## Monitoring Across Topologies
 
 Every topology can report to [Dagu Console](/overview/console-monitoring), which shows your servers together and emails you when a workflow fails or a server stops reporting. Several independent servers, such as one per site, each connect to the same workspace and appear side by side.
+
+<picture>
+  <source media="(max-width: 640px)" srcset="/deployment-models/console-monitoring-portrait.svg" width="480" height="804">
+  <img src="/deployment-models/console-monitoring.svg" width="720" height="450" alt="Monitoring with Dagu Console: three servers, one per topology, report metadata to Dagu Console over outbound HTTPS; Dagu Console shows them together and emails you when a workflow fails or a server goes silent, while logs, outputs, and secrets stay on each server." style="width: 100%; height: auto; margin: 16px 0 24px;">
+</picture>
 
 The always-on Dagu server sends the reports (`dagu server` or `dagu start-all`); workers never report themselves. It reports the runs whose events reach its event store, `paths.event_store_dir`, which defaults to `logs/admin/events` under the Dagu home rather than under the data directory.
 
