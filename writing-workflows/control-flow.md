@@ -431,6 +431,23 @@ steps:
       - condition: "test -d /output"
 ```
 
+### Failing on Unmet Conditions
+
+An unmet precondition skips the step, and a skipped step does not fail the run. To fail the run when a condition does not hold, use a guard step whose command exits non-zero, and make later steps depend on it:
+
+```yaml
+params:
+  - mode: production
+steps:
+  - id: guard
+    run: test "${params.mode}" = production
+  - id: deploy
+    depends: guard
+    run: echo "Deploying"
+```
+
+With any other `mode`, `guard` fails, `deploy` does not start, and the run fails.
+
 ### Router Steps
 
 Route execution to different steps based on a runtime value. Router steps evaluate an expression and run all target steps whose pattern matches. Router steps run in graph workflows, which is the default.
