@@ -13,7 +13,7 @@ Browser steps are powered by the [Stagehand](https://github.com/browserbase/stag
 - Dagu v2.18.0 or later.
 - Google Chrome or Chromium installed on the host that runs the step. Dagu uses `browser.executable`, then `CHROME_PATH`, then a standard install location. Of the container images, only [`dev`](/server-admin/deployment/docker-images) includes Chromium, on amd64 and arm64.
 - In a container, Chrome's sandbox needs a seccomp profile that allows user namespaces. Run the `dev` image with its [Compose setup](/server-admin/deployment/docker-images), which applies the bundled profile. Where the sandbox cannot start at all, `browser.sandbox: false` in the [Dagu config](/server-admin/reference) or `DAGU_BROWSER_SANDBOX=false` turns it off for every browser on the host. Without the sandbox, a page that exploits the browser runs with the permissions of the Dagu process, which in the Dagu images has `sudo`, so use it only for sites you trust. A DAG cannot change this setting. With the sandbox on, a browser step fails when `CI` is set or Dagu runs as root on Linux, because the browser would run without the sandbox there; set `DAGU_BROWSER_SANDBOX=false` to allow it.
-- A model configured with a DAG-level `llm` block or `with.llm`. Use a model that follows tool-call schemas reliably.
+- A model configured with a DAG-level `llm` block or `with.llm`, unless every operation replays without one (see [How Much AI Decides](#how-much-ai-decides)). Use a model that follows tool-call schemas reliably.
 
 ## Quick Start
 
@@ -103,8 +103,8 @@ steps:
 | Operation | Value | Effect |
 |-----------|-------|--------|
 | `goto` | URL | Navigate the current tab. |
-| `act` | Instruction, or `{instruction, cache}` | Perform one action described in natural language: click, type, select, scroll, press a key. |
-| `upload` | `{files, into, cache}` | Give local files to a file input. See [Uploads](#uploads). |
+| `act` | Instruction, or `{instruction, ai, cache}` | Perform one action described in natural language: click, type, select, scroll, press a key. |
+| `upload` | `{files, into, ai, cache}` | Give local files to a file input. See [Uploads](#uploads). |
 | `extract` | `{instruction, schema}` | Extract data from the page. The schema must be a JSON Schema with `type: object`. |
 | `expect` | [Condition](#conditions) | Fail the step unless the condition holds. |
 | `wait` | `{selector}` or `{duration}` | Wait until a CSS selector is visible, or pause, such as `2s`. |
@@ -241,9 +241,9 @@ When the step succeeds with outputs, stdout is one JSON object of them, so `outp
 
 ```text
 [start] goto "https://portal.vendor.com/billing" (completed, 0 tokens, 800ms)
-[1/6] act "Type %user% into the email field" → fill xpath=/html[1]/body[1]/form[1]/input[1] %user% (cache-hit, 0 tokens, 300ms)
-[4/6] expect "text \"Invoices\"" → the page text contains "Invoices" (completed, 0 tokens, 0s)
-[5/6] extract "The most recent invoice" → {"invoice_number":"INV-8812","total":412.5} (completed, 1204 tokens, 2.1s)
+[1/6] act "Type %user% into the email field" → fill xpath=/html[1]/body[1]/form[1]/input[1] %user% (cache-hit, 0 tokens, 300ms, via element)
+[4/6] expect "text \"Invoices\"" → the page text contains "Invoices" (completed, 0 tokens, 0s, via exact)
+[5/6] extract "The most recent invoice" → {"invoice_number":"INV-8812","total":412.5} (completed, 1204 tokens, 2.1s, via model)
 [6/6] download "invoice-8812.pdf" → browser/invoice/downloads/invoice-8812.pdf (completed, 0 tokens, 0s)
 ```
 
@@ -298,7 +298,8 @@ steps:
 |-------|-------------|
 | `files` | The files to upload. Required. |
 | `into` | The file input, or the button or drop area that opens the file picker, in plain words. Leave it out when the page has only one file input. |
-| `cache` | Set `false` to find the element with the model on every run. Defaults to `true`. |
+| `ai` | How much the model decides for finding `into`: `on_miss` (default), `every_run`, or `never`. See [How Much AI Decides](#how-much-ai-decides). |
+| `cache` | Set `false` to find the element with the model on every run, the same as `ai: every_run`. |
 
 `files` is a string or a list. Each entry is:
 
@@ -324,7 +325,7 @@ The model sees the `into` text and the page, never the files, their names, or th
 The step log shows how the files reached the page:
 
 ```text
-[1/2] upload "The receipt drop area" → invoice-0312.pdf through the file picker xpath=/html[1]/body[1]/main[1]/button[2] opened (completed, 1180 tokens, 2.4s)
+[1/2] upload "The receipt drop area" → invoice-0312.pdf through the file picker xpath=/html[1]/body[1]/main[1]/button[2] opened (completed, 1180 tokens, 2.4s, via model)
 ```
 
 ## Dialogs
@@ -342,9 +343,41 @@ An `act` records the actions it performed, and the recordings are kept when the 
 - Recordings are kept only when the whole step succeeds. When an operation fails on the page after a replay, the step drops the recordings it replayed, so the next run asks the model again. A failure of the model, the browser, a download, or an `ask`, or a canceled run, leaves them.
 - The cache covers `act` and `upload`. `extract` and statement conditions call the model on every run. With fixed conditions, a rerun calls the model only for `extract`.
 - A replay clicks the recorded element location. After a layout change it can hit a different element without failing, so follow important acts with an `expect`, preferably a fixed one; when the `expect` fails, the replay is dropped.
-- Disable the cache with `with.cache: false`, or for one operation with `act: {instruction: ..., cache: false}` or `upload: {..., cache: false}`.
+- To have the model act on every run, or never, set `ai`; see [How Much AI Decides](#how-much-ai-decides).
 - `dagu browser session export` writes the recordings of the acts and uploads a session ran for a step before its first run; see [Building a Step in a Browser Session](#building-a-step-in-a-browser-session).
 - `dagu browser cache clear <dag>` removes the recordings of every step of a DAG, or of one step with `--step <id>`. The REST API does the same with `DELETE /api/v1/dags/{fileName}/browser-cache`, optionally with `?step=<id>`. Removing all of a DAG's history with `dagu rm --history` also clears them. Each clears only the cache on the host that handles it.
+
+## How Much AI Decides
+
+`with.ai` chooses how much the model decides for the step's `act` operations and its `upload` operations with `into`. `ai` on an `act` or an `upload` replaces it for that operation.
+
+| `ai` | Behavior |
+|------|----------|
+| `on_miss` (default) | Replay the recording; when a replay fails, the model acts and the recording is repaired. |
+| `every_run` | The model acts on every run. A successful operation still records what it did. |
+| `never` | Replay only. No model is called. With no recording on the host, or a replay that fails, the step fails and says why. |
+
+A step whose operations never call the model needs no `llm` block. `extract` and statement conditions always ask the model, so `ai: never` on the step refuses them; fixed checks and an `upload` without `into` are allowed. A step without a model fails validation naming the first operation that needs one.
+
+To run a step with no model, such as a demo that must make no model request, record it first under `on_miss`, or export it from a [browser session](#building-a-step-in-a-browser-session), then set `ai: never`:
+
+```yaml
+steps:
+  - id: sign_in
+    action: browser.run
+    with:
+      url: https://portal.example.com/login
+      ai: never
+      do:
+        - act: Click the Sign in button
+        - expect: {text: Dashboard}
+```
+
+Under `never`, the actions replayed before a miss have already run on the page. The recording is kept, so a later run under `on_miss` repairs it.
+
+`cache: false`, on the step or an operation, means `every_run`. Set `ai` or `cache`, not both.
+
+Each operation's event in the timeline and the step log records how it ran: `via element` for a replay, `via model` for a model request, and `via exact` for a fixed check.
 
 ## Building a Step in a Browser Session
 
@@ -572,7 +605,8 @@ The step's **Agent** tab shows each operation with its status, token use, screen
 | `do` | Operations to run in order. Required. |
 | `url` | Page opened before the first operation. |
 | `variables` | Values referenced as `%name%` in `act` instructions. |
-| `cache` | Record and replay acts and uploads. Defaults to `true`. See [Replay Cache](#replay-cache). |
+| `ai` | `on_miss` (default), `every_run`, or `never`. See [How Much AI Decides](#how-much-ai-decides). |
+| `cache` | Set `false` to have the model act on every run, the same as `ai: every_run`. See [Replay Cache](#replay-cache). |
 | `browser` | [Browser options](#browser-options). |
 | `llm` | Model configuration that replaces the DAG-level `llm` block. |
 
@@ -602,7 +636,8 @@ Set `trusted_cas` and `guard_client_certificates` in the host's [config.yaml](/s
 | `expectation not met: ...` | An `expect` condition did not hold. | Look at the failure screenshot; fix the act before it, or add `within` when the page needs time to change. |
 | A field holds `0-11` or `[0-11]` instead of an address | The field has no `format: uri`, so it gets the link's element id. | Add `format: uri` to the field and list it under `required`. See [Outputs](#outputs). |
 | `selector "..." did not appear within ...` | A `wait` selector did not become visible. | Check the selector, or raise the operation's `timeout`. |
-| `browser actions need a model` | No `llm` block applies to the step. | Add a DAG-level `llm` block or `with.llm`. |
+| `browser actions need a model for do[N] ...` | No `llm` block applies to the step, and the operation it names needs the model. | Add a DAG-level `llm` block or `with.llm`, or set `ai: never` when every operation can replay. |
+| `the act cannot run without AI: ...` | Under `ai: never`, the act has no recording on this host, or its replay failed. | Run the step under `on_miss` to record or repair it, then switch back to `never`. |
 | `Chrome installation not found; set CHROME_PATH` | No Chrome or Chromium on the host that runs the step. | Install Chrome, set `CHROME_PATH` or `browser.executable`, or use the `dev` image. |
 | `the browser sandbox is on, but the browser runtime turns it off because CI is set` (or `when running as root`) | The browser would run without its sandbox. | Run Dagu as a non-root user without `CI`, or set `DAGU_BROWSER_SANDBOX=false`. |
 | `Chrome exited before its debugging port was ready` | On Linux, usually a sandbox that cannot start, as under Docker's default seccomp profile. | Run the `dev` image with its [Compose setup](/server-admin/deployment/docker-images), or set `DAGU_BROWSER_SANDBOX=false`. |
