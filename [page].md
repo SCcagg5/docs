@@ -18,7 +18,7 @@ Define workflows in declarative YAML over your existing commands and tools. One 
 
 ## Simple declarative orchestration
 
-Your commands stay the same. One declarative YAML file adds the operational layer around them: schedule, retries, parallel runs, human tasks, and run history:
+Your commands stay the same. One declarative YAML file adds the operational layer around them: schedule, retries, parallel runs, human tasks, monitoring, and run history:
 
 ```mermaid
 flowchart LR
@@ -28,6 +28,7 @@ flowchart LR
     W --> P["Parallel runs"]
     W --> H["Human tasks"]
     W --> L["Logs + Web UI"]
+    W --> M["Monitoring"]
 
     style C stroke:lightblue,stroke-width:1.6px,color:#333
     style W stroke:orange,stroke-width:1.6px,color:#333
@@ -36,6 +37,7 @@ flowchart LR
     style P stroke:lime,stroke-width:1.6px,color:#333
     style H stroke:lime,stroke-width:1.6px,color:#333
     style L stroke:lime,stroke-width:1.6px,color:#333
+    style M stroke:lime,stroke-width:1.6px,color:#333
 ```
 
 <div class="overview-card-grid overview-strengths-grid">
