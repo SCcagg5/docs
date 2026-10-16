@@ -326,6 +326,7 @@ All options support `DAGU_` prefix.
 - `DAGU_IP_ACCESS_ALLOWED_IPS` - Comma-separated IPv4/IPv6 addresses and CIDR ranges allowed to access the HTTP server. An empty value disables filtering.
 - `DAGU_IP_ACCESS_TRUSTED_PROXIES` - Comma-separated proxy addresses and CIDR ranges permitted to supply forwarded client IP headers.
 - `DAGU_CACHE` - Cache mode (default: `normal`)
+- `DAGU_CORS_ALLOWED_ORIGINS` - Comma-separated origins allowed for cross-origin browser access (`cors_allowed_origins`; default: empty, which disables it). See [Cross-Origin Browser Access](/server-admin/server#cross-origin-browser-access).
 
 ### Terminal
 - `DAGU_TERMINAL_ENABLED` - Enable web-based terminal (default: `false`)
@@ -470,10 +471,15 @@ grants. Set `DAGU_AUTH_PROXY_REQUIRE_MAPPING=true` to reject them.
 - `DAGU_DEFAULT_EXECUTION_MODE` - Default execution mode: `local` (default) or `distributed`. When `distributed`, all DAGs are dispatched to workers through the coordinator, even without an explicit `worker_selector`. Use `worker_selector: local` in a DAG to override.
 - `DAGU_DEFAULT_SHELL` - Default shell for command steps. When unset, Dagu falls back to `$SHELL`, then `sh`.
 - `DAGU_BROWSER_SANDBOX` - Set to `false` to turn off Chromium's sandbox for every browser that [browser steps](/step-types/browser) start on this host (default: `true`). Use it only where the sandbox cannot start; see [Browser requirements](/step-types/browser#requirements). With the sandbox on, a browser step fails when `CI` is set or Dagu runs as root on Linux, because the browser would run without the sandbox there.
+- `DAGU_BROWSER_GUARD_CLIENT_CERTIFICATES` - Set to `false` to stop Dagu from guarding other HTTPS sites against Chrome client certificate prompts (`browser.guard_client_certificates`; default: `true` when client certificates are configured). See [Browser Certificate Trust](#browser-certificate-trust).
 - `DAGU_CONTAINER_RUNTIME` - Container runtime for root-level `container:`, step-level `container:`, `docker.run`, and containerized `harness.run`. Valid values: `docker` (default) or `podman`.
 - `DAGU_PODMAN_HOST` - Podman's Docker-compatible API socket when `DAGU_CONTAINER_RUNTIME=podman` (default: `unix:///run/podman/podman.sock`).
 
 `DAGU_CONTAINER_RUNTIME` and `DAGU_PODMAN_HOST` are read from the Dagu process environment. They are not DAG YAML fields and cannot be selected from DAG-level or step-level `env:`.
+
+### OpenCode
+- `DAGU_OPENCODE_EXECUTABLE` - OpenCode executable path or command name for the managed OpenCode service (`opencode.executable`; default: `opencode`)
+- `DAGU_OPENCODE_ENV_PASSTHROUGH` - Comma-separated exact environment variable names forwarded to the managed OpenCode service (`opencode.env_passthrough`). See [OpenCode service setup](/step-types/harness/opencode#service-setup).
 
 ### Coordinator
 - `DAGU_COORDINATOR_ENABLED` - Enable coordinator service (default: `true`)
