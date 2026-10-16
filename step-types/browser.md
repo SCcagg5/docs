@@ -453,6 +453,33 @@ with:
 
 The sign-in acts run only while the login form is showing. Profiles are stored on the host that runs the step. Runs that use the same profile run one at a time. A run fails immediately when another run is waiting for input with the same profile open, or when a [browser session](#building-a-step-in-a-browser-session) holds it.
 
+## Refused Pages
+
+A browser without a window looks to sites like the same Chrome with one. It sends the user agent its Chrome sends with a window, never `HeadlessChrome`, and reports a screen of 1920x1080, or the viewport's size when that is larger. `headless: false` therefore does not change how a site treats the step, and a check passed in a shown window with a [profile](#profiles) holds for the headless step too, for as long as the site keeps it.
+
+The first time a Chrome executable runs without a window, Dagu starts it once on a temporary profile to learn its user agent, and keeps it under `browser/user-agents/` in the data directory. After Chrome updates, the next launch learns it again. When the user agent cannot be learned or kept, the step runs and warns.
+
+A page counts as refused when its site answers with a bot check in place of it, such as Cloudflare's challenge, or with `403 Forbidden` or `429 Too Many Requests`. After the start URL and after every operation, a refused page adds a line to the step log and the timeline:
+
+```text
+[start] page refused shop.example.com answered with a Cloudflare bot check (HTTP 403) in place of the page
+```
+
+A refusal usually makes a later operation fail, so a step that fails while the browser shows a refused page ends its error with the same sentence. It keeps the [recordings](#replay-cache) it replayed, since the refusal says nothing about them. [Browser sessions](/getting-started/cli#browser-session-open) report the refusal as `refused`.
+
+When the start URL or an operation lands on a bot check, the step waits up to 10 seconds for the check to pass, as checks that need no person do. A check still showing after that is reported as above. To pass one that needs a person:
+
+1. On the host that runs the step, open a browser session with a window and the step's profile, and pass the check in the window:
+
+   ```bash
+   dagu browser session open https://shop.example.com --headed --profile shop
+   ```
+
+2. Close the session so the step can use the profile: `dagu browser session close SESSION_ID`.
+3. Give the step `browser.profile: shop`.
+
+The site may ask again later. A `403` or `429` without a bot check is not a check to pass: confirm the account may open the page and the site allows the host's network, and for `429`, run less often. If a site keeps refusing, ask its owner to allow the host, or use its API.
+
 ## Client Certificates
 
 Some sites require a TLS client certificate. Chrome normally takes it from the operating system, which can ask for the certificate's password every time it is used, so the step cannot run unattended. `browser.client_certificates` gives Dagu the certificate instead:
@@ -616,7 +643,7 @@ The step's **Agent** tab shows each operation with its status, token use, screen
 
 | Field | Description |
 |-------|-------------|
-| `browser.headless` | Run without a window. Defaults to `true`. |
+| `browser.headless` | Run without a window. Defaults to `true`. Sites see the same user agent and screen as with a window; see [Refused Pages](#refused-pages). |
 | `browser.executable` | Chrome or Chromium binary. |
 | `browser.viewport` | `{width, height}` in pixels. |
 | `browser.proxy` | Proxy server URL. Authenticated proxies are not supported. |
@@ -647,6 +674,8 @@ Set `trusted_cas` and `guard_client_certificates` in the host's [config.yaml](/s
 | `the instruction uses %name%, but the ask that sets it did not run` | The `ask` was skipped because its `when` did not hold. | Give the act the same `when` as the `ask`. |
 | `download of ... did not finish within ...` | The download ran longer than the longest `act` or `goto` timeout. | Raise the `timeout` of the act that starts it. |
 | `the browser did not respond within ...` | The page stopped responding. | Check the page; raise `timeout` for slow pages. |
+| `... answered with a Cloudflare bot check (HTTP 403) in place of the page` | The site showed a bot check that did not pass on its own within 10 seconds. | Pass it once in a browser session with a window and the step's profile. See [Refused Pages](#refused-pages). |
+| `... refused the page (HTTP 403 Forbidden)` or `(HTTP 429 Too Many Requests)` | The account may not open the page, the site blocks the host's network, or the site wants fewer requests. | Check the account's access, ask the site's owner to allow the host, or run less often. See [Refused Pages](#refused-pages). |
 | `browser profile "..." is held by DAG run ..., which is waiting for input` | Another run holds the profile while it waits for an answer. | Answer or cancel that run. |
 | `the site asks for a TLS client certificate (ERR_...)` | The site requires a client certificate and no entry names its host. | Add it to `browser.client_certificates`. See [Client Certificates](#client-certificates). |
 | `... rejected the client certificate ...` | The site refused the certificate presented. | Check that the certificate is the one the site expects and has not expired or been revoked. |

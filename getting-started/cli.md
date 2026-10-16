@@ -749,6 +749,8 @@ The `tls_verified` result describes the certificate proxy's check of the final H
 
 Check `url` and `title` to confirm the page opened as expected. TLS verification does not confirm login or identify which CA was used.
 
+`open`, `do`, and `describe` report a page its site [refused](/step-types/browser#refused-pages) as `refused`: the `host`, the HTTP `status`, `bot_check` naming the check, such as `cloudflare`, when the site answered with one, and a `message` saying so in a sentence. An operation that failed on the page ends its error with that sentence, and `describe --format text` prints it on a `Refused:` line. Later commands keep reporting the bot check while the browser stays on the page.
+
 #### `browser session do`
 
 Read one operation from stdin, in JSON or YAML, and run it in the session.
