@@ -221,6 +221,7 @@ coordinator:
   host: "127.0.0.1"       # Bind address
   port: 50055             # gRPC port
   health_port: 8091       # HTTP health check port (0 to disable)
+  worker_wait_timeout: "2m"  # Hold a run with no matching healthy worker this long before it fails (0 refuses at once)
 
 # Worker (for distributed execution)
 worker:
@@ -480,6 +481,7 @@ grants. Set `DAGU_AUTH_PROXY_REQUIRE_MAPPING=true` to reject them.
 - `DAGU_COORDINATOR_ADVERTISE` - Address to advertise in service registry (default: auto-detected hostname)
 - `DAGU_COORDINATOR_PORT` - Coordinator gRPC port (default: `50055`)
 - `DAGU_COORDINATOR_HEALTH_PORT` - Coordinator HTTP health check port (default: `8091`, `0` to disable)
+- `DAGU_COORDINATOR_WORKER_WAIT_TIMEOUT` - How long the coordinator holds a dispatched run as `Queued` when no healthy worker matches its selector. The first matching worker that registers in time takes the run; after the timeout the run fails with an error that names the selector (`coordinator.worker_wait_timeout`; default: `2m`, `0` refuses the dispatch at once).
 
 ### Worker
 - `DAGU_WORKER_ID` - Worker instance ID (default: `hostname@PID`)
@@ -822,6 +824,7 @@ peer:
 - `ip_access.trusted_proxies`: empty (forwarded client IP headers are ignored)
 - `default_execution_mode`: `local`
 - `coordinator.enabled`: `true`
+- `coordinator.worker_wait_timeout`: `2m`
 - `worker.shutdown_timeout`: `60s`
 - `terminal.enabled`: `false`
 - `terminal.max_sessions`: `5`
