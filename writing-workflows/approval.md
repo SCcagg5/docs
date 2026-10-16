@@ -1,61 +1,118 @@
-# Approval
+# Approval Gates
 
-Add `approval` to any step to pause execution after the step completes and wait for human review.
+Add `approval` to an executable step to pause the run after the step succeeds. A person reviews the step's output, then approves it, pushes it back to run again, or rejects the run.
 
-If the workflow should wait without running a command first, use a [human task](/writing-workflows/human-tasks) instead.
+To pause without running a command first, or to collect typed values, use a [human task](/writing-workflows/human-tasks) instead. [Human-in-the-Loop](/writing-workflows/human-in-the-loop) compares the two and describes the waiting and resume behavior they share.
 
-| Behavior | Human task | Approval gate |
-|----------|------------|---------------|
-| Definition | Standalone `action: human.task` step | `approval` attached to an executable step |
-| Before waiting | Runs no process | Runs the step first |
-| Result | Complete, or push back when `with.push_back` is set | Approve, reject, or push back |
-| Rewind | Supported with `with.push_back.rewind_to` | Supported with `rewind_to` |
-| Collected values | Typed form properties become step outputs | Inputs become approval or push-back environment values |
-
-## Usage
+## Quick Start
 
 ```yaml
 steps:
   - id: deploy_staging
     run: ./deploy.sh staging
     approval:
-      prompt: "Verify staging deployment before production"
+      prompt: Verify the staging deployment before production
+
   - id: deploy_prod
+    depends: [deploy_staging]
     run: ./deploy.sh production
-    depends: deploy_staging
 ```
 
-The `deploy_staging` step runs `./deploy.sh staging`, then enters `Waiting` status. The `deploy_prod` step remains `Not Started` until the approval is resolved.
+`deploy_staging` runs `./deploy.sh staging`. When the command succeeds, the step and the run enter `Waiting`, and `deploy_prod` stays `Not Started`. Open the run's **Approval** tab, review the output, and select **Approve**. The run resumes and `deploy_prod` runs.
 
-## Configuration
+A step that fails does not wait for approval. It fails like any other step.
+
+## Fields
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `prompt` | string | Message displayed to the approver |
-| `input` | string[] | Parameter names to collect from the approver |
-| `required` | string[] | Parameters that must be provided (subset of `input`) |
-| `rewind_to` | string | Optional step name or ID to restart from on push-back |
+| `prompt` | string | Message shown to the reviewer. |
+| `input` | string[] | Names of values the reviewer can provide. |
+| `required` | string[] | Values that must be provided when approving. Each name must also appear in `input`. |
+| `rewind_to` | string | Step name or ID that push-back restarts from. It must be this step or one of its upstream dependencies. Defaults to this step. |
 
-All fields are optional. A bare `approval: {}` is valid: no prompt, no inputs, just a pause.
+All fields are optional. `approval: {}` pauses with no prompt and no inputs.
 
-Validation: every entry in `required` must also appear in `input`. The build fails otherwise.
-If `rewind_to` is set, it must reference the current step or one of its upstream dependencies.
-Push-back input names are not special-cased. `FEEDBACK` is common, but any key can be used. If `input` is omitted, Dagu preserves all provided push-back keys.
+## Reviewing a Step
 
-## How It Works
+When a step waits, the run shows an **Approval** tab with each waiting step's prompt and stdout, **Approve** and **Retry** buttons, and, after a push-back, the iteration and push-back history. The reviewer has three choices:
 
-1. The step executes normally (command runs, produces stdout/stderr)
-2. After successful execution, the step enters `Waiting` status
-3. The DAG status becomes `Waiting`
-4. Dependent steps remain `Not Started`
-5. A human reviews the step output and chooses one of:
-   - **Approve**: step succeeds, dependents execute
-   - **Push back**: step resets to `Not Started` and re-executes (see [Push-back](#push-back))
-   - **Reject**: step enters `Rejected` status, DAG becomes `Rejected`, dependents are aborted
+| Action | Web UI | Result |
+|--------|--------|--------|
+| Approve | **Approve** | The step succeeds and its dependents can run. |
+| Push back | **Retry** | The restart point and its dependents run again with feedback, then the step waits again. |
+| Reject | **Reject** in the run's action bar | The step becomes `Rejected` and the run ends. |
+
+Approving, pushing back, and rejecting require permission to run DAGs. The run records who acted on each step.
+
+### Approve
+
+Approving marks the step `Succeeded`. Values provided for `input` become environment variables in downstream steps:
+
+```yaml
+steps:
+  - id: generate_plan
+    run: ./generate-migration-plan.sh
+    approval:
+      prompt: Review the migration plan
+      input: [APPROVED_BY, MAINTENANCE_WINDOW]
+      required: [APPROVED_BY]
+
+  - id: execute_migration
+    depends: [generate_plan]
+    run: ./migrate.sh --approver "${env.APPROVED_BY}" --window "${env.MAINTENANCE_WINDOW}"
+```
+
+The reviewer must provide `APPROVED_BY`. `MAINTENANCE_WINDOW` is optional.
+
+### Push Back
+
+Push-back resets a waiting step to `Not Started` and runs it again with the reviewer's feedback. With `rewind_to`, Dagu resets that earlier step and every step that depends on it instead. The step then waits again, and the reviewer can approve, push back again, or reject. Each push-back increments the step's `approvalIteration`.
+
+```yaml
+steps:
+  - id: prepare_report
+    run: ./prepare-report.sh
+
+  - id: draft_report
+    depends: [prepare_report]
+    run: ./draft-report.sh
+    approval:
+      prompt: Review the draft report
+      input: [FEEDBACK]
+      rewind_to: prepare_report
+
+  - id: publish_report
+    depends: [draft_report]
+    run: ./publish-report.sh
+```
+
+Pushing back `draft_report` resets `prepare_report`, `draft_report`, and `publish_report`. `prepare_report` runs again, `draft_report` runs again and waits, and `publish_report` runs after approval.
+
+Each step that runs again receives the feedback through the [push-back context](/writing-workflows/human-in-the-loop#push-back-context): one environment variable per feedback key, plus `DAG_PUSHBACK`, `DAG_PUSHBACK_ITERATION`, and `DAG_PUSHBACK_PREVIOUS_STDOUT_FILE`. Feedback keys are free-form. `FEEDBACK` is common, but any name works. A step that declares `approval.input` sees only those keys from an approval push-back. A step without `approval.input` sees every key.
+
+`chat.completion` and `harness.run` steps receive the feedback automatically, including a rewound upstream AI step that has no `approval` of its own.
+
+### Reject
+
+While an approval waits, the run's action bar shows **Reject** in place of **Stop**. The reviewer can enter an optional reason. The rejected step becomes `Rejected`, the run ends with status `Rejected`, and steps that depend on the rejected step do not run.
+
+The step records the rejection:
+
+| Field | Description |
+|-------|-------------|
+| `rejectedAt` | Time of the rejection |
+| `rejectedBy` | Name of the user who rejected, when authenticated |
+| `rejectedById` | ID of the user who rejected, when authenticated |
+| `rejectionReason` | Reason entered by the reviewer, if any |
+
+## Resuming After Approval
+
+The run resumes once an approval lets a step run. It starts directly, or through the queue when the DAG belongs to an enabled [global queue](/server-admin/queues). Queued resumes need a running scheduler. A [sub-DAG](/writing-workflows/sub-dags) run resumes only after every waiting step inside it is resolved.
 
 ### Parallel Approvals
 
-In a root run, approving a step resumes the run as soon as a step can run, even while other approval steps keep waiting. The resumed attempt runs the ready branch and returns to `Waiting` until the remaining approvals are resolved.
+In a root run, approving one step resumes the run even while other approvals keep waiting. The resumed attempt runs the ready branch and returns to `Waiting` for the rest.
 
 ```yaml
 type: graph
@@ -63,49 +120,39 @@ steps:
   - id: build_web
     run: ./build-web.sh
     approval:
-      prompt: "Release the web build?"
+      prompt: Release the web build?
+
   - id: deploy_web
+    depends: [build_web]
     run: ./deploy-web.sh
-    depends: build_web
+
   - id: build_api
     run: ./build-api.sh
     approval:
-      prompt: "Release the API build?"
+      prompt: Release the API build?
+
   - id: deploy_api
+    depends: [build_api]
     run: ./deploy-api.sh
-    depends: build_api
 ```
 
-Approving `build_web` runs `deploy_web` while `build_api` keeps waiting.
+Approving `build_web` runs `deploy_web` while `build_api` keeps waiting. See [Resuming](/writing-workflows/human-in-the-loop#resuming) for the cases in which the run waits until every approval is resolved.
 
-While any step has failed, been aborted, or is waiting for a retry, or when the ready step declares build `inputs`, the run keeps waiting until no manual steps remain, so failed steps are retried once. A [sub-DAG](/writing-workflows/sub-dags) run resumes only after every waiting step inside it is resolved.
+### Recovering a Failed Resume
 
-The resume starts directly, or through the queue when the DAG belongs to an enabled [global queue](/server-admin/queues); queued resumes need a running scheduler.
+The approval and its inputs are stored before the run resumes. If the resume cannot be accepted, the run view shows **Approval saved; resume failed.** with a **Retry resume** button, and the REST API returns `503` with `approvalStored: true` and `resumePending: true` in `details`. Do not approve again. Select **Retry resume**, or retry only the resume:
+
+```bash
+curl -X POST "http://localhost:8080/api/v1/dag-runs/{name}/{dagRunId}/resume"
+```
+
+Retrying while the run is already queued or running does not start another execution.
 
 ## Examples
 
-### Collecting Inputs
-
-Approved inputs become environment variables in subsequent steps:
-
-```yaml
-steps:
-  - id: generate_plan
-    run: ./generate-migration-plan.sh
-    approval:
-      prompt: "Review migration plan"
-      input: [APPROVED_BY, MAINTENANCE_WINDOW]
-      required: [APPROVED_BY]
-  - id: execute_migration
-    run: ./migrate.sh --approver "${env.APPROVED_BY}" --window "${env.MAINTENANCE_WINDOW}"
-    depends: generate_plan
-```
-
-`APPROVED_BY` must be provided (it's in `required`). `MAINTENANCE_WINDOW` is optional. Both are injected as environment variables into `execute_migration` after approval.
-
 ### Gating a Sub-DAG
 
-Use `action: dag.run` with `approval` to gate a multi-step workflow behind a single approval point. The sub-DAG runs to completion first, then the step waits for review:
+Attach `approval` to a `dag.run` step to review the result of a whole child workflow at one point. The child DAG runs to completion, then the step waits:
 
 ```yaml
 steps:
@@ -114,140 +161,39 @@ steps:
     with:
       dag: integration-test-suite
     approval:
-      prompt: "Review test results before deploying"
+      prompt: Review the test results before deploying
+
   - id: deploy
+    depends: [run_integration_tests]
     run: ./deploy.sh production
-    depends: run_integration_tests
 ```
 
-The `integration-test-suite` DAG (which may contain many steps internally) executes fully. Once finished, `run_integration_tests` enters `Waiting`. The approver reviews the sub-DAG's results before `deploy` proceeds.
+### Approving Before a Sub-DAG
 
-This pattern is useful when you want human review over a complex operation that involves multiple internal steps (tests, builds, migrations) without adding approval to each individual sub-step.
-
-### Approval Before a Sub-DAG
-
-The reverse pattern: approve first, then trigger multi-step execution. Place approval on the step *before* running the child DAG:
+To approve before a child workflow starts, put the approval on the step before it:
 
 ```yaml
 steps:
   - id: review_config
     run: ./validate-deploy-config.sh production
     approval:
-      prompt: "Config validated. Approve production deployment?"
+      prompt: Config validated. Approve the production deployment?
       input: [DEPLOY_VERSION]
       required: [DEPLOY_VERSION]
+
   - id: deploy_pipeline
+    depends: [review_config]
     action: dag.run
     with:
       dag: production-deploy
       params: "deploy_version=${env.DEPLOY_VERSION}"
-    depends: review_config
 ```
 
-`validate-deploy-config.sh` runs and shows the configuration diff. The approver reviews it, provides `DEPLOY_VERSION`, and approves. Then `production-deploy` (a full deployment pipeline with its own steps) executes with the approved version.
+The reviewer reads the validation output, enters `DEPLOY_VERSION`, and approves. `production-deploy` then runs with that version.
 
-## Push-back
+### Adjusting a Query
 
-Push-back resets a waiting step to `Not Started` and re-executes it. By default, the approval step itself is rerun. If `approval.rewind_to` is configured, Dagu resets that earlier step and all of its transitive dependents instead. This is useful when a step's output needs revision and the reviewer wants to restart from an earlier preparation step.
-
-On executable steps, push-back is only available with the `approval` field. A [human task](/writing-workflows/human-tasks#requesting-changes) can push back through `with.push_back`, which uses the same reset and push-back context.
-
-### How Push-back Works
-
-1. A step executes and enters `Waiting`
-2. The approver reviews the output and pushes back with input parameters
-3. The configured restart point resets to `Not Started`
-4. All transitive downstream dependents of that restart point also reset to `Not Started`
-5. Every step that is reset by the push-back receives push-back context when it executes again
-6. The `approvalIteration` counter increments (starts at 0, becomes 1 after first push-back)
-7. The step enters `Waiting` again: the approver can approve, push back again, or reject
-
-### Example: Rewind to an Earlier Step
-
-```yaml
-steps:
-  - id: prepare_report
-    run: ./prepare-report.sh
-
-  - id: draft_report
-    run: ./draft-report.sh
-    approval:
-      prompt: "Review the draft report"
-      input: [FEEDBACK]
-      rewind_to: prepare_report
-    depends: prepare_report
-
-  - id: publish_report
-    run: ./publish-report.sh
-    depends: draft_report
-```
-
-If the reviewer pushes `draft_report` back, Dagu resets `prepare_report`, `draft_report`, and `publish_report` to `Not Started`. `prepare_report` reruns immediately, `draft_report` reruns and waits for approval again, and `publish_report` runs later after approval is granted. Each rewound step receives the push-back context when it executes.
-
-### Push-back Environment
-
-Every step re-executed because of push-back receives:
-
-- Each provided push-back input as an environment variable, such as `FEEDBACK` or `SINCE`
-- `DAG_PUSHBACK`, a JSON payload describing the latest push-back and the full history
-- `DAG_PUSHBACK_ITERATION`, the current push-back count as a plain integer string
-- `DAG_PUSHBACK_PREVIOUS_STDOUT_FILE`, when the current step had a stdout log before it was reset
-
-If the current step declares `approval.input`, only those declared keys from an approval push-back are exposed on that step. Steps without an input allowlist receive all provided push-back keys. Feedback from a [human-task push-back](/writing-workflows/human-tasks#requesting-changes) holds only declared feedback properties and reaches every rewound step.
-
-Push-back inputs are passed as environment variables, so the inputs of one push-back, encoded as one JSON object, are limited to 16 KiB. A larger push-back is rejected with `400` before the run changes.
-
-For `action: chat.completion` and `action: harness.run`, Dagu also passes the push-back context directly to the executor. This means reviewer feedback is incorporated without adding DAG glue code that references `${FEEDBACK}` manually. If `approval.rewind_to` restarts an upstream AI step, that rewound AI step receives the context even if it does not declare its own `approval`.
-
-Harness steps receive the previous stdout as a log file path only. Dagu does not inline the previous stdout content into the prompt or environment because harness output can be large.
-
-`DAG_PUSHBACK` looks like this:
-
-```json
-{
-  "iteration": 2,
-  "by": "reviewer",
-  "at": "2026-04-26T06:18:43Z",
-  "inputs": {
-    "FEEDBACK": "Tighten the executive summary",
-    "FORMAT": "markdown"
-  },
-  "history": [
-    {
-      "iteration": 1,
-      "by": "reviewer",
-      "at": "2026-04-26T06:12:10Z",
-      "inputs": {
-        "FEEDBACK": "Add error counts",
-        "FORMAT": "markdown"
-      }
-    },
-    {
-      "iteration": 2,
-      "by": "reviewer",
-      "at": "2026-04-26T06:18:43Z",
-      "inputs": {
-        "FEEDBACK": "Tighten the executive summary",
-        "FORMAT": "markdown"
-      }
-    }
-  ]
-}
-```
-
-Field meanings:
-
-- `iteration`: Current push-back count for this run
-- `by`: Authenticated user who submitted the latest push-back, when available
-- `at`: Server-generated UTC timestamp in RFC3339 format
-- `inputs`: Latest push-back inputs visible to the current step
-- `history`: Chronological push-back history, oldest first
-
-See [Runtime Context and Variables](/writing-workflows/runtime-variables#push-back-context-dag_pushback) for the push-back variable reference.
-
-### Example
-
-A step queries metrics and outputs a summary. The approver can push back with different parameters until the output looks right:
+Push-back inputs can change the parameters of a step instead of carrying prose feedback:
 
 ```yaml
 tools:
@@ -262,18 +208,19 @@ steps:
       curl -s "https://metrics.internal/api/errors?since=$SINCE&group=$GROUPING" \
         | jq '.[] | "\(.date): \(.count) errors (\(.rate)%)"'
     approval:
-      prompt: "Review error rate summary. Push back to adjust query parameters."
+      prompt: Review the error rate summary. Push back to adjust the query.
       input: [SINCE, GROUPING]
+
   - id: send_report
+    depends: [query_metrics]
     run: ./send-to-slack.sh
-    depends: query_metrics
 ```
 
-First run: `SINCE` and `GROUPING` are unset, so the script defaults to `7d` and `daily`. The approver reviews the output and pushes back with `SINCE=30d` and `GROUPING=weekly`. The step re-runs with those values, producing a different summary. The approver can push back again or approve.
+The first run uses `7d` and `daily`. Pushing back with `SINCE=30d` and `GROUPING=weekly` reruns the query with those values.
 
-### Example: Iterating on LLM Output
+### Revising LLM Output from a Shell Step
 
-Use `action: chat.completion` or `action: harness.run` when you want Dagu to pass approval feedback to the AI step automatically. For shell commands that call an LLM CLI directly, wire the feedback environment variables into the command yourself:
+`chat.completion` and `harness.run` steps receive feedback automatically. A shell step that calls an LLM CLI reads it from the environment:
 
 ```yaml
 steps:
@@ -285,177 +232,52 @@ steps:
       fi
       git log --oneline v1.2.0..HEAD | claude -p "$PROMPT"
     approval:
-      prompt: "Review the draft changelog. Push back with feedback to revise."
+      prompt: Review the draft changelog. Push back with feedback to revise it.
       input: [FEEDBACK]
+
   - id: publish
+    depends: [draft_changelog]
     run: ./publish-changelog.sh
-    depends: draft_changelog
 ```
 
-First run: Claude generates a changelog from the git log. The reviewer reads the output in the Approval tab and pushes back with `FEEDBACK="Make it more concise and group by feature area"`. The step re-runs, this time passing the feedback into the prompt. This loop continues until the reviewer approves.
+## REST API
 
-### REST API
+| Action | Endpoint |
+|--------|----------|
+| Approve | `POST /api/v1/dag-runs/{name}/{dagRunId}/steps/{stepName}/approve` |
+| Push back | `POST /api/v1/dag-runs/{name}/{dagRunId}/steps/{stepName}/push-back` |
+| Reject | `POST /api/v1/dag-runs/{name}/{dagRunId}/steps/{stepName}/reject` |
+| Retry a failed resume | `POST /api/v1/dag-runs/{name}/{dagRunId}/resume` |
+
+For a step inside a sub-DAG run, insert `/sub-dag-runs/{subDAGRunId}` before `/steps`.
 
 ```bash
-curl -X POST "http://localhost:8080/api/v1/dag-runs/{name}/{dagRunId}/steps/{stepName}/push-back" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "inputs": {
-      "SINCE": "30d",
-      "GROUPING": "weekly"
-    }
-  }'
-```
-
-Response:
-
-```json
-{
-  "dagRunId": "...",
-  "stepName": "query_metrics",
-  "approvalIteration": 1,
-  "resumed": true
-}
-```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `approvalIteration` | integer | How many times this step has been pushed back |
-| `resumed` | boolean | Whether the DAG run was re-enqueued for execution |
-
-For sub-DAG runs, use the sub-DAG endpoint:
-
-```
-POST /api/v1/dag-runs/{name}/{dagRunId}/sub-dag-runs/{subDAGRunId}/steps/{stepName}/push-back
-```
-
-## Approval and Rejection
-
-### Web UI
-
-When steps enter `Waiting` status, an **Approval** tab appears in the DAG run view. The tab shows:
-
-- Each waiting step with its name and prompt
-- The step's stdout output inline
-- **Approve** and **Retry** (push-back) buttons per step
-- The current approval iteration count (if pushed back)
-- Push-back history entries with iteration, actor, timestamp, and filtered inputs
-
-The run details show the actor name for approval, rejection, and push-back operations. When an actor ID is available, hover over the name to view it.
-
-To reject all waiting steps at once, use the **Reject** button in the DAG run action bar (replaces the Stop button when the DAG is in `Waiting` status). An optional rejection reason can be provided.
-
-If an approval is saved but the run cannot be resumed, the run view shows **Approval saved; resume failed.** with a **Retry resume** button. Retrying resumes the run without approving again.
-
-### REST API
-
-#### Approve a Step
-
-```bash
+# Approve with inputs
 curl -X POST "http://localhost:8080/api/v1/dag-runs/{name}/{dagRunId}/steps/{stepName}/approve" \
   -H "Content-Type: application/json" \
-  -d '{
-    "inputs": {
-      "APPROVED_BY": "john@example.com"
-    }
-  }'
-```
+  -d '{"inputs": {"APPROVED_BY": "john@example.com"}}'
 
-The approval and its inputs are saved before the run resumes. If the resume cannot be accepted, the request returns `503` with `approvalStored: true` and `resumePending: true` in `details`. Do not approve again; retry only the resume:
+# Push back with feedback
+curl -X POST "http://localhost:8080/api/v1/dag-runs/{name}/{dagRunId}/steps/{stepName}/push-back" \
+  -H "Content-Type: application/json" \
+  -d '{"inputs": {"SINCE": "30d", "GROUPING": "weekly"}}'
 
-```bash
-curl -X POST "http://localhost:8080/api/v1/dag-runs/{name}/{dagRunId}/resume"
-```
-
-Repeating the request while the run is queued or running does not start another execution. See [Resume After Approval](/web-ui/api#resume-after-approval).
-
-#### Reject a Step
-
-```bash
+# Reject with an optional reason
 curl -X POST "http://localhost:8080/api/v1/dag-runs/{name}/{dagRunId}/steps/{stepName}/reject" \
   -H "Content-Type: application/json" \
-  -d '{
-    "reason": "Deployment blocked due to pending security review"
-  }'
+  -d '{"reason": "Blocked by a pending security review"}'
 ```
 
-The `reason` field is optional.
-
-For sub-DAG runs, use the sub-DAG variants:
-
-```
-POST /api/v1/dag-runs/{name}/{dagRunId}/sub-dag-runs/{subDAGRunId}/steps/{stepName}/approve
-POST /api/v1/dag-runs/{name}/{dagRunId}/sub-dag-runs/{subDAGRunId}/steps/{stepName}/reject
-```
-
-DAG-run node responses expose actor names and IDs in `approvedBy`/`approvedById`, `rejectedBy`/`rejectedById`, and each `pushBackHistory` entry's `by`/`byId`. IDs may be absent on older runs or when authentication is disabled.
-
-## Email Notifications
-
-Configure email notifications when a workflow enters wait status:
-
-```yaml
-mail_on:
-  wait: true
-
-wait_mail:
-  from: dagu@example.com
-  to:
-    - approvers@example.com
-  prefix: "[APPROVAL REQUIRED]"
-```
-
-The email is sent each time the run enters `Waiting`, including after an approval resumes one branch while other steps still wait.
-
-See [Email Notifications](/writing-workflows/email-notifications) for details.
-
-## Wait Handler
-
-Execute custom logic when the workflow enters wait status:
-
-```yaml
-handler_on:
-  wait:
-    run: |
-      echo "Waiting steps: $DAG_WAITING_STEPS"
-      curl -X POST https://slack.com/webhook \
-        -d '{"text": "Approval required for ${context.dag.name}"}'
-
-steps:
-  - id: deploy
-    run: ./deploy.sh
-    approval:
-      prompt: "Approve deployment"
-```
-
-The `DAG_WAITING_STEPS` environment variable contains a comma-separated list of waiting step names. The handler runs each time the run enters `Waiting`, including after an approval resumes one branch while other steps still wait.
-
-See [Lifecycle Handlers](/writing-workflows/lifecycle-handlers) for details.
-
-## Rejection Behavior
-
-When a step is rejected:
-
-1. The step status changes to `Rejected`
-2. The overall DAG status becomes `Rejected`
-3. All dependent steps are marked as `Aborted` and will not execute
-4. The `onFailure` handler is executed (if configured)
-
-The following information is recorded:
-
-| Field | Description |
-|-------|-------------|
-| `rejectedAt` | Timestamp of the rejection |
-| `rejectedBy` | Username of the person who rejected (if authenticated) |
-| `rejectedById` | ID of the person who rejected (if authenticated) |
-| `rejectionReason` | Optional reason provided during rejection |
+DAG-run node responses expose who acted in `approvedBy`/`approvedById`, `rejectedBy`/`rejectedById`, and each `pushBackHistory` entry's `by`/`byId`. IDs may be absent on older runs or when authentication is disabled. See [Approval Endpoints](/web-ui/api#approval-endpoints) for request and response details.
 
 ## Limitations
 
-- Steps with `approval` cannot use `worker_selector` (distributed execution) because approval state is stored locally
+- A DAG with approval steps cannot set `worker_selector`, and a `dag.run` step with a worker selector cannot run it as a child.
+- There is no CLI command or MCP operation for approving, pushing back, or rejecting a step.
 
 ## See Also
 
-- [Lifecycle Handlers](/writing-workflows/lifecycle-handlers): Execute handlers on wait status
-- [Email Notifications](/writing-workflows/email-notifications): Configure wait status emails
-- [Step Types](/step-types/shell): Built-in execution types
+- [Human-in-the-Loop](/writing-workflows/human-in-the-loop): Choosing between approval gates and human tasks, resume rules, and notifications
+- [Human Tasks](/writing-workflows/human-tasks): Pausing for typed input without running a command
+- [Lifecycle Handlers](/writing-workflows/lifecycle-handlers): Running a handler when the run enters `Waiting`
+- [Email Notifications](/writing-workflows/email-notifications): Sending an email when the run enters `Waiting`

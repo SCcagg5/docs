@@ -316,6 +316,7 @@ const fullSidebar = [
         text: "Human-in-the-Loop",
         collapsed: true,
         items: [
+          { text: "Overview", link: "/writing-workflows/human-in-the-loop" },
           { text: "Human Tasks", link: "/writing-workflows/human-tasks" },
           { text: "Approval Gates", link: "/writing-workflows/approval" },
         ],
