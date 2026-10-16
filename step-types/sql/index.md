@@ -2,7 +2,7 @@
 
 Execute SQL queries and data operations directly in your workflows.
 
-PostgreSQL and SQLite are built-in SQL step types. DuckDB is available as the official [`duckdb@v1` action](/step-types/sql/duckdb), which keeps the Dagu core binary portable and cgo-free.
+PostgreSQL, SQLite, and ClickHouse are built-in SQL step types. DuckDB is available as the official [`duckdb@v1` action](/step-types/sql/duckdb), which keeps the Dagu core binary portable and cgo-free.
 
 ## Supported Databases
 
@@ -11,6 +11,7 @@ PostgreSQL and SQLite are built-in SQL step types. DuckDB is available as the of
 | [PostgreSQL](/step-types/sql/postgresql) | `postgres.query`, `postgres.import` | Full-featured PostgreSQL support with advisory locks |
 | [SQLite](/step-types/sql/sqlite) | `sqlite.query`, `sqlite.import` | Lightweight embedded database with file locking |
 | [DuckDB](/step-types/sql/duckdb) | `duckdb@v1` official action | Embedded analytical database for local OLAP workflows |
+| [ClickHouse](/step-types/sql/clickhouse) | `clickhouse.query` | Queries and scripts over the ClickHouse HTTP interface |
 
 ## Basic Usage
 
@@ -34,6 +35,8 @@ Query results are written to **stdout** by default. Use `output: VAR_NAME` to ca
 :::
 
 Use `postgres.query` or `sqlite.query` for built-in SQL queries. Use `postgres.import` or `sqlite.import` to load CSV, TSV, or JSONL files into a table.
+
+Use `clickhouse.query` for ClickHouse. It has its own options for server-side parameters and settings, and the transaction, import, streaming, and locking options on this page do not apply to it. See [ClickHouse](/step-types/sql/clickhouse).
 
 Use `action: duckdb@v1` for DuckDB. DuckDB imports and exports are expressed with DuckDB SQL such as `read_csv_auto`, `read_json_auto`, `read_parquet`, and `COPY`.
 
@@ -354,3 +357,4 @@ See [parallel.items](/writing-workflows/execution-control#parallel-execution) fo
 - [PostgreSQL](/step-types/sql/postgresql) - PostgreSQL-specific features
 - [SQLite](/step-types/sql/sqlite) - SQLite-specific features
 - [DuckDB](/step-types/sql/duckdb) - Official DuckDB action
+- [ClickHouse](/step-types/sql/clickhouse) - ClickHouse over HTTP

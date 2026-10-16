@@ -431,6 +431,7 @@ const fullSidebar = [
               { text: "PostgreSQL", link: "/step-types/sql/postgresql" },
               { text: "SQLite", link: "/step-types/sql/sqlite" },
               { text: "DuckDB", link: "/step-types/sql/duckdb" },
+              { text: "ClickHouse", link: "/step-types/sql/clickhouse" },
             ],
           },
           { text: "Harness", link: "/step-types/harness/" },

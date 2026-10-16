@@ -885,6 +885,7 @@ Accepted built-in action names:
 | `archive.create`, `archive.extract`, `archive.list` | Archive operations. |
 | `browser.extract`, `browser.run` | Browser automation in a local Chrome. See [Browser](/step-types/browser). |
 | `chat.completion` | LLM chat completion. |
+| `clickhouse.query` | ClickHouse queries over the HTTP interface. See [ClickHouse](/step-types/sql/clickhouse). |
 | `computer.extract`, `computer.run` | Desktop automation on macOS and Windows. See [Computer](/step-types/computer). |
 | `container.run` | Container executor. |
 | `dag.run` | Run a child DAG synchronously. |
