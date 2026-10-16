@@ -58,14 +58,18 @@ Every server that starts with the key takes a slot until the workspace's slots a
 
 ### Name servers
 
-Dagu Console shows each server by the hostname it reports. In Docker and Kubernetes the hostname is often a random container ID, so give servers a name:
+Dagu Console shows each server by the name it reports: `license.server_name`, else the hostname. In Docker and Kubernetes the hostname is often a random container ID.
+
+To rename a server, change its name on the server's **Settings** tab in Dagu Console, or select **Rename** next to **Server** on the **Plan & features** page in Dagu. Both set the same name, and Dagu Console and Dagu show it from then on, with the reported name beside it. Clear the name to show the reported name again.
+
+To set the name a server reports, for example for every replica of a deployment:
 
 ```yaml
 license:
   server_name: prod-eu-1
 ```
 
-or `DAGU_LICENSE_SERVER_NAME=prod-eu-1`. The name is sent at every check-in, so a rename shows up in the console within an hour.
+or `DAGU_LICENSE_SERVER_NAME=prod-eu-1`. The server sends it at every check-in, so a change shows up in the console within an hour. A name set in Dagu Console or Dagu is shown in its place.
 
 ### Keep the server's identity
 
