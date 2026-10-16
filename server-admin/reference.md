@@ -542,7 +542,7 @@ Legacy YAML keys `scheduler.heartbeat_interval`, `scheduler.heartbeat_sync_inter
 ### License
 - `DAGU_LICENSE_KEY` - Server key or license key from Dagu Console (`license.key`)
 - `DAGU_LICENSE_CLOUD_URL` - License validation service URL (`license.cloud_url`)
-- `DAGU_LICENSE_SERVER_NAME` - Name that identifies this server in Dagu Console (`license.server_name`; default: the hostname)
+- `DAGU_LICENSE_SERVER_NAME` - Name this server reports to Dagu Console (`license.server_name`; default: the hostname). A name set in Dagu Console or Dagu is shown in its place
 
 ### Dagu Console Monitoring (Beta)
 - `DAGU_CLOUD_REPORT` - What the server reports to Dagu Console: `off`, `health`, or `runs` (`cloud.report`; default: empty, which reports nothing until an administrator chooses in the web UI). A set value, `off` included, fixes the level and the web UI shows it read-only. See [Monitoring (Beta)](/overview/console-monitoring).
