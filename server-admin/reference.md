@@ -590,7 +590,7 @@ These variables are maintained for backward compatibility but should not be used
 
 `browser.trusted_cas` sets which private CAs Dagu trusts for specific sites. Configure it in `config.yaml` on each machine that runs browsers. See [Trusted Certificate Authorities](/step-types/browser#trusted-certificate-authorities) for setup and a connection check.
 
-`browser.guard_client_certificates` prevents Chrome from asking the user to choose a client certificate. It routes other HTTPS requests through Dagu's proxy without presenting a client certificate. The default is `true` when client certificates are configured. Set it to `false` to disable this behavior.
+`browser.guard_client_certificates` prevents Chrome from asking the user to choose a client certificate. Dagu checks each other HTTPS site once with a TLS handshake of its own. Sites that use TLS 1.3, ask for no client certificate, and have a publicly trusted certificate keep Chrome's own connection, so they see Chrome's TLS handshake. Other sites go through Dagu's proxy, which presents no client certificate. Under TLS 1.3 a request for a certificate is encrypted, so a site that asks Chrome but did not ask during Dagu's check can still reach Chrome's certificate selection. The default is `true` when client certificates are configured. Set it to `false` to disable this behavior.
 
 The guard also trusts CAs from `client_certificates[].ca_file` for other hosts. Use `trusted_cas` to restrict a CA to named hosts. Those hosts always use Dagu's proxy, even with the guard disabled. They also keep the system CAs and every `client_certificates[].ca_file`, so an entry only adds trust.
 

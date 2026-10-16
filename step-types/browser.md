@@ -535,7 +535,7 @@ browser:
 
 Dagu uses a local proxy to present client certificates and check server certificates. The proxy follows `browser.proxy` or the operating system's proxy settings.
 
-By default, it also handles other HTTPS requests to prevent Chrome from prompting for a certificate. See [`browser.guard_client_certificates`](/server-admin/reference#browser-certificate-trust) to change this behavior.
+By default, it also guards other HTTPS sites so that Chrome never prompts for a certificate. The proxy checks each site once with a TLS handshake of its own. A site that uses TLS 1.3, asks for no client certificate, and has a publicly trusted certificate gets Chrome's own connection, so it sees the same TLS handshake as Chrome without Dagu. Every other site goes through the proxy, which presents no certificate. See [`browser.guard_client_certificates`](/server-admin/reference#browser-certificate-trust) to change this behavior.
 
 - The certificates are read before the browser starts. A wrong passphrase or an unreadable file fails the step at once, naming the entry but never the passphrase.
 - A page that does not load because of a certificate fails the operation with the reason, such as `portal.example.com rejected the client certificate ...: unknown certificate authority`. The step's log lists each host a certificate was presented to.
