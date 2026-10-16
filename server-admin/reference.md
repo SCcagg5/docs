@@ -607,12 +607,18 @@ See [Git Sync](/server-admin/git-sync) for repository layout, supporting-file be
 These variables are maintained for backward compatibility but should not be used in new deployments:
 - `DAGU__ADMIN_NAVBAR_COLOR` - Use `DAGU_UI_NAVBAR_COLOR`
 - `DAGU__ADMIN_NAVBAR_TITLE` - Use `DAGU_UI_NAVBAR_TITLE`
+- `DAGU_NAVBAR_COLOR` - Use `DAGU_UI_NAVBAR_COLOR`
+- `DAGU_NAVBAR_TITLE` - Use `DAGU_UI_NAVBAR_TITLE`
+- `DAGU_LOG_ENCODING_CHARSET` - Use `DAGU_UI_LOG_ENCODING_CHARSET`
+- `DAGU_MAX_DASHBOARD_PAGE_LIMIT` - Use `DAGU_UI_MAX_DASHBOARD_PAGE_LIMIT`
 - `DAGU__ADMIN_PORT` - Use `DAGU_PORT`
 - `DAGU__ADMIN_HOST` - Use `DAGU_HOST`
 - `DAGU__DATA` - Use `DAGU_DATA_DIR`
 - `DAGU__SUSPEND_FLAGS_DIR` - Use `DAGU_SUSPEND_FLAGS_DIR`
 - `DAGU__ADMIN_LOGS_DIR` - Use `DAGU_ADMIN_LOG_DIR`
 - `DAGU__EVENT_STORE_DIR` - Use `DAGU_EVENT_STORE_DIR`
+
+When a short UI variable such as `DAGU_NAVBAR_TITLE` and its `DAGU_UI_*` form are both set, the `DAGU_UI_*` value is used.
 
 ## Browser Certificate Trust
 
