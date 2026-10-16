@@ -95,6 +95,17 @@ secrets:
     ca_cert: ""        # Path to a CA certificate file for verifying a custom/private Vault TLS endpoint
     client_cert: ""    # Path to a client certificate file for mTLS authentication to Vault
     client_key: ""     # Path to a client key file paired with `client_cert`
+  aws:
+    region: ""         # Default region for the `aws` provider
+  gcp:
+    project_id: ""     # Default project ID for the `gcp` provider
+    location: ""       # Optional regional location for the `gcp` provider
+  azure:
+    vault_url: ""      # Default Key Vault URL for the `azure` provider
+  alibaba:
+    region: ""         # Default region for the `alibaba` provider
+    endpoint: ""       # Dedicated KMS gateway hostname (no scheme or path)
+    ca_file: ""        # CA certificate file for the dedicated gateway
 
 # Permissions
 permissions:
@@ -566,6 +577,13 @@ Legacy YAML keys `scheduler.heartbeat_interval`, `scheduler.heartbeat_sync_inter
 - `DAGU_SECRETS_KUBERNETES_NAMESPACE` - Default namespace for the `kubernetes` secret provider
 - `DAGU_SECRETS_KUBERNETES_KUBECONFIG` - Default kubeconfig path for the `kubernetes` secret provider
 - `DAGU_SECRETS_KUBERNETES_CONTEXT` - Default kubeconfig context for the `kubernetes` secret provider
+- `DAGU_SECRETS_AWS_REGION` - Default region for the `aws` secret provider. See [AWS Secrets Manager](/writing-workflows/secrets/aws-provider).
+- `DAGU_SECRETS_GCP_PROJECT_ID` - Default project ID for the `gcp` secret provider
+- `DAGU_SECRETS_GCP_LOCATION` - Optional regional location for the `gcp` secret provider. See [Google Secret Manager](/writing-workflows/secrets/gcp-provider).
+- `DAGU_SECRETS_AZURE_VAULT_URL` - Default Key Vault URL for the `azure` secret provider. See [Azure Key Vault](/writing-workflows/secrets/azure-provider).
+- `DAGU_SECRETS_ALIBABA_REGION` - Default region for the `alibaba` secret provider
+- `DAGU_SECRETS_ALIBABA_ENDPOINT` - Dedicated KMS gateway hostname for the `alibaba` secret provider, without `https://` or a path
+- `DAGU_SECRETS_ALIBABA_CA_FILE` - CA certificate file for the dedicated KMS gateway. See [Alibaba Cloud KMS](/writing-workflows/secrets/alibaba-provider).
 
 ### Git Sync
 See [Git Sync](/server-admin/git-sync) for repository layout, supporting-file behavior, and operational guidance.
