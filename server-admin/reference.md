@@ -228,6 +228,7 @@ worker:
   coordinators: []         # Required by dagu worker (host:port)
   max_active_runs: 100      # Max parallel task executions
   health_port: 8092         # HTTP health check port (0 to disable)
+  shutdown_timeout: "60s"   # Drain bound on SIGINT/SIGTERM before running DAG runs are canceled (0 waits without a bound)
   labels:                 # Worker capabilities
     gpu: "false"
     memory: "16G"
@@ -484,6 +485,7 @@ grants. Set `DAGU_AUTH_PROXY_REQUIRE_MAPPING=true` to reject them.
 - `DAGU_WORKER_ID` - Worker instance ID (default: `hostname@PID`)
 - `DAGU_WORKER_MAX_ACTIVE_RUNS` - Max concurrent task executions (default: `100`)
 - `DAGU_WORKER_HEALTH_PORT` - Worker HTTP health check port (default: `8092`, `0` to disable)
+- `DAGU_WORKER_SHUTDOWN_TIMEOUT` - How long a worker that stops on `SIGINT` or `SIGTERM` waits for running DAG runs to finish before it cancels them (`worker.shutdown_timeout`; default: `60s`, `0` waits without a bound). Set the supervisor's stop timeout at least 15s above this value: systemd `TimeoutStopSec` defaults to 90s, `docker stop` to 10s, and Kubernetes `terminationGracePeriodSeconds` to 30s.
 - `DAGU_WORKER_LABELS` - Worker labels (format: `key1=value1,key2=value2`)
 - `DAGU_WORKER_COORDINATORS` - Coordinator addresses required by `dagu worker` (`host:port,...`)
 - `DAGU_WORKER_POSTGRES_POOL_MAX_OPEN_CONNS` - PostgreSQL max open connections across all DSNs (default: `25`)
@@ -820,6 +822,7 @@ peer:
 - `ip_access.trusted_proxies`: empty (forwarded client IP headers are ignored)
 - `default_execution_mode`: `local`
 - `coordinator.enabled`: `true`
+- `worker.shutdown_timeout`: `60s`
 - `terminal.enabled`: `false`
 - `terminal.max_sessions`: `5`
 - `audit.enabled`: `true`
