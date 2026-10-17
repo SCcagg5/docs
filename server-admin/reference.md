@@ -302,7 +302,7 @@ git_sync:
 
 All options support `DAGU_` prefix.
 
-**Note:** Dagu filters which system environment variables are passed to step processes and sub-DAG executions. Built-in forwarding includes the platform allowlist plus the prefixes `DAGU_`, `DAG_`, `LC_`, and `KUBERNETES_`. You can extend that set with top-level `env_passthrough` and `env_passthrough_prefixes`. See [Operations - Security](/server-admin/operations#security) for exact behavior.
+**Note:** Dagu filters which system environment variables are passed to step processes and sub-DAG executions. Built-in forwarding includes the platform allowlist plus the prefixes `DAGU_`, `DAG_`, `LC_`, and `KUBERNETES_`. You can extend that set with top-level `env_passthrough` and `env_passthrough_prefixes`. Dagu's own credentials, such as `DAGU_AUTH_BASIC_PASSWORD` and `DAGU_ENCRYPTION_KEY`, are never forwarded either way. See [Operations - Security](/server-admin/operations#security) for exact behavior.
 
 ### Server
 - `DAGU_HOST` - Server host (default: `127.0.0.1`)

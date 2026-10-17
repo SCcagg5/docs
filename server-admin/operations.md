@@ -471,13 +471,28 @@ handler_on:
 
 Dagu filters the process environment before it builds the step execution environment and before it starts sub-DAG executions.
 
-System environment variables are still available for `${VAR}` expansion when Dagu parses the DAG.
+System environment variables are still available for `${VAR}` expansion when Dagu parses the DAG, except Dagu's own credentials (see below).
 
 Built-in forwarded variables:
 
 - Unix and macOS exact names: `PATH`, `HOME`, `USER`, `SHELL`, `TMPDIR`, `TERM`, `EDITOR`, `VISUAL`, `LANG`, `LC_ALL`, `LC_CTYPE`, `TZ`, `LD_LIBRARY_PATH`, `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, `XDG_CACHE_HOME`, `DOCKER_HOST`, `DOCKER_TLS_VERIFY`, `DOCKER_CERT_PATH`, `DOCKER_API_VERSION`
 - Windows exact names: `USERPROFILE`, `SYSTEMROOT`, `WINDIR`, `SYSTEMDRIVE`, `COMSPEC`, `PATHEXT`, `TEMP`, `TMP`, `PATH`, `PSMODULEPATH`, `HOME`, `DOCKER_HOST`, `DOCKER_TLS_VERIFY`, `DOCKER_CERT_PATH`, `DOCKER_API_VERSION`
 - Prefixes on all platforms: `DAGU_`, `DAG_`, `LC_`, `KUBERNETES_`
+
+Dagu's own credentials are never forwarded, even though their names start with `DAGU_`:
+
+- `DAGU_AUTH_BASIC_PASSWORD`, `DAGU_AUTH_OIDC_CLIENT_SECRET`, `DAGU_AUTH_TOKEN_SECRET`, `DAGU_AUTH_BUILTIN_INITIAL_ADMIN_PASSWORD`
+- `DAGU_SECRETS_VAULT_TOKEN`, `DAGU_TUNNEL_TAILSCALE_AUTH_KEY`, `DAGU_GITSYNC_AUTH_TOKEN`, `DAGU_GITSYNC_AUTH_SSH_PASSPHRASE`
+- `DAGU_LICENSE`, `DAGU_LICENSE_KEY`, `DAGU_XLSX_PASSWORD`, `DAGU_ENCRYPTION_KEY`
+
+Dagu's own processes, such as the `dagu start` process that runs a DAG, still receive them. A step never does, and `${VAR}` or `${env.VAR}` references to them stay unexpanded. `env_passthrough` does not change this. To give a step one of these values, declare it as a secret, which also masks it in logs:
+
+```yaml
+secrets:
+  - name: VAULT_TOKEN
+    provider: env
+    key: DAGU_SECRETS_VAULT_TOKEN
+```
 
 Dagu-managed runtime metadata is available through canonical `${context.*}` references in value-resolved workflow fields. Dagu also projects selected values with the `DAG_` prefix for each step execution:
 - `DAG_NAME`, `DAG_RUN_ID`, `DAG_RUN_STEP_NAME`
