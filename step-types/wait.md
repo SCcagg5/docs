@@ -110,3 +110,9 @@ Network errors, connection refusals, and non-matching statuses are treated as "n
 | `request_timeout` | string | `10s` | `wait.http` | Per-request timeout. |
 
 Use the step-level `timeout_sec` field to set an overall maximum wait time.
+
+## Value References
+
+`path`, `method`, `headers`, and `body` accept [value references](/writing-workflows/template-variables), such as `${params.name}` or a previous step's output, and resolve when the step starts.
+
+`duration`, `until`, `url`, `state`, `status`, `poll_interval`, and `request_timeout` are validated as written when the DAG is built, before references resolve. A reference such as `until: ${params.deadline}` is rejected before the DAG runs.
