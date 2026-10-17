@@ -52,7 +52,7 @@ docker run --rm ghcr.io/dagucloud/dagu:latest dagu version
 
 ## 2. Write your first workflow
 
-A DAG is a YAML file. Save the following as `hello.yaml`:
+A DAG is a YAML file. In an empty folder, save the following as `hello.yaml`:
 
 ```yaml
 steps:
@@ -145,10 +145,12 @@ docker run --rm \
 
 :::
 
-Visit <http://localhost:8080>. The UI shows live run status, logs per step, execution history, and a YAML editor.
-The `--dags .` flag keeps `hello.yaml` in the workflow list while the server runs.
+Visit <http://localhost:8080>. On first launch, create the admin account unless the installer wizard already created one. The UI shows live run status, logs per step, execution history, and a YAML editor.
+The `--dags .` flag loads every YAML file in the current folder as a workflow, which is why `hello.yaml` lives in an empty folder.
 
-On first launch against an empty DAGs directory, Dagu creates five example workflows (`example-01-basic-sequential.yaml` through `example-05-template-and-file.yaml`). The default binary directory is `~/.config/dagu/dags/`; the Docker commands above mount `~/.dagu/dags/` at `/var/lib/dagu/dags/`. Set `DAGU_SKIP_EXAMPLES=true` or `skip_examples: true` in `config.yaml` to disable the examples.
+If the script installer set up the background service, Dagu is already running at <http://localhost:8080>. Add workflows from the UI, or copy `hello.yaml` into the DAGs directory the installer printed, instead of starting a second server.
+
+On first launch against an empty DAGs directory, Dagu creates six example workflows (`example-01-basic-sequential.yaml` through `example-06-retry-on-failure.yaml`). The first attempt of `example-06-retry-on-failure` fails and a retry succeeds, which shows how a step recovers from a flaky dependency. The default binary directory is `~/.config/dagu/dags/`; the Docker commands above mount `~/.dagu/dags/` at `/var/lib/dagu/dags/`. Set `DAGU_SKIP_EXAMPLES=true` or `skip_examples: true` in `config.yaml` to disable the examples.
 
 ## Core pieces
 
@@ -275,3 +277,4 @@ steps:
 - [CLI Reference](/getting-started/cli): every command and flag
 - [MCP Quickstart](/mcp/quickstart): connect external AI tools to a running Dagu server
 - [MCP Server](/mcp/): connect MCP-capable clients to a running Dagu server
+- [Monitoring](/overview/console-monitoring): get an email when a workflow fails or a server stops reporting
