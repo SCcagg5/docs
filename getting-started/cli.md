@@ -909,7 +909,7 @@ dagu computer cache clear invoices --step post
 
 ### `xlsx inspect`
 
-Describe every sheet of a workbook before writing [xlsx steps](/step-types/xlsx) for it: its used range, the detected data block, the header row and column names, the type and a profile of each column, the number of data rows, its tables, and a few typed sample rows. Named ranges and the date system are listed for the workbook. This is what `xlsx.info` publishes, read straight from the file; nothing is written and no run is created.
+Describe every sheet of a workbook before writing [xlsx steps](/step-types/xlsx) for it: its used range, the detected data block, the header row and column names, the type and a profile of each column, the number of data rows, its tables, and a few typed sample rows. Named ranges and the date system are listed for the workbook. This is what `xlsx.info` publishes, read directly from the workbook; nothing is written and no run is created.
 
 Types and the profile come from every data row of the block, up to 5000: how many cells are filled and blank, how many distinct values there are, the values themselves when a few repeat, the lowest and highest number or date, and the cells that do not read as the column's type, such as `未定` in a number column. The text format shows the profile after each column name:
 
@@ -921,6 +921,8 @@ Columns: 状態 (string: 済, 未; 40 blank), 数量 (number; 1..250; 1 odd: D30
 dagu xlsx inspect <path> [options]
 ```
 
+Use `-` as `<path>` to read the workbook from standard input, up to 64 MiB. Larger input fails before workbook parsing. This limit applies only to standard input. With `--format json`, the result reports `"path": "-"` for stdin.
+
 **Options:**
 - `--sheet` - Describe this sheet only
 - `--rows`, `-n` - Typed sample rows to show per sheet (default: 5)
@@ -930,9 +932,10 @@ dagu xlsx inspect <path> [options]
 dagu xlsx inspect orders.xlsx
 dagu xlsx inspect orders.xlsx --sheet Orders --rows 10
 dagu xlsx inspect orders.xlsx --format json
+cat orders.xlsx | dagu xlsx inspect - --format json
 ```
 
-With `--format json`, the result is one object with `path`, `date_system`, `sheets` (each with `name`, `used_range`, `range`, `header_row`, `headers`, `types`, `row_count`, `columns`, `profile_truncated`, `tables`, and `sample`), `named_ranges`, and `warnings`. Each entry of `columns` has `name`, `type`, `filled`, `blank`, `distinct`, and, when there is something to report, `values`, `min`, `max`, `odd`, and `odd_cells`; see [Looking at a Workbook First](/step-types/xlsx#looking-at-a-workbook-first). The command exits nonzero with the error on stderr when the file cannot be read.
+With `--format json`, the result is one object with `path`, `date_system`, `sheets` (each with `name`, `used_range`, `range`, `header_row`, `headers`, `types`, `row_count`, `columns`, `profile_truncated`, `tables`, and `sample`), `named_ranges`, and `warnings`. Each entry of `columns` has `name`, `type`, `filled`, `blank`, `distinct`, and, when there is something to report, `values`, `min`, `max`, `odd`, and `odd_cells`; see [Looking at a Workbook First](/step-types/xlsx#looking-at-a-workbook-first). The command exits nonzero with the error on stderr when the workbook cannot be read.
 
 ### `xlsx read`
 
@@ -941,6 +944,8 @@ Print the rows of a sheet the way `xlsx.read` publishes them: numbers stay numbe
 ```bash
 dagu xlsx read <path> [options]
 ```
+
+Use `-` as `<path>` to read the workbook from standard input, up to 64 MiB. Larger input fails before workbook parsing. This limit applies only to standard input.
 
 **Options:**
 - `--sheet` - Sheet name; the first sheet by default
@@ -954,6 +959,7 @@ dagu xlsx read <path> [options]
 dagu xlsx read orders.xlsx
 dagu xlsx read orders.xlsx --sheet Orders --range A2:F --header false
 dagu xlsx read orders.xlsx --columns "Invoice No,Amount" --format json
+cat orders.xlsx | dagu xlsx read - --sheet Orders --format json
 ```
 
 The text format prints a tab-separated header line and one line per row. With `--format json`, the result is one object with `rows`, `count`, `headers`, `sheet`, `range`, `warnings`, and `truncated`.

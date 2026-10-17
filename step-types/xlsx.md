@@ -80,7 +80,16 @@ dagu xlsx inspect orders.xlsx
 dagu xlsx read orders.xlsx --sheet Orders --columns "Invoice No,Amount" --format json
 ```
 
-`inspect` prints what `xlsx.info` publishes plus a few typed sample rows per sheet; `read` prints what `xlsx.read` publishes. Both read the file directly and create no run. See the [CLI reference](/getting-started/cli#xlsx-inspect). An MCP client can do the same through the `dagu_read` tool's [`workbook` target](/mcp/tools#dagu-read).
+`inspect` prints what `xlsx.info` publishes plus a few typed sample rows per sheet; `read` prints what `xlsx.read` publishes. Both read the supplied workbook directly and create no run. See the [CLI reference](/getting-started/cli#xlsx-inspect). An MCP client can do the same through the `dagu_read` tool's [`workbook` target](/mcp/tools#dagu-read).
+
+For either CLI command, use `-` as the path to read a workbook from standard input:
+
+```bash
+cat orders.xlsx | dagu xlsx inspect - --format json
+cat orders.xlsx | dagu xlsx read - --sheet Orders --format json
+```
+
+Standard input accepts up to 64 MiB; larger input fails before workbook parsing. `inspect --format json` reports `"path": "-"` for stdin. This size limit applies only to standard input.
 
 `xlsx.info` publishes `path`, `date_system`, `sheets` (each with `name`, `used_range`, `range`, `header_row`, `headers`, `types`, `row_count`, `columns`, `profile_truncated`, and `tables`), `named_ranges`, and `warnings`. `xlsx.list_sheets` publishes `sheets` and `count`.
 
