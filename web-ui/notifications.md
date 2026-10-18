@@ -2,7 +2,7 @@
 
 Notifications route DAG-run events to team destinations without hard-coding Microsoft Teams or Slack webhooks, email recipients, Telegram chats, or webhook endpoints in every DAG file.
 
-Use notifications for ordinary message delivery: Microsoft Teams, Slack, Google Chat, email, Telegram, or custom webhooks. Use [Incident Routing](/web-ui/incidents) only for systems that manage an incident lifecycle, such as PagerDuty or SolarWinds Incident Response.
+Use notifications for ordinary message delivery: Microsoft Teams, Slack, Google Chat, email, Telegram, custom webhooks, or a local command on the Dagu server. Use [Incident Routing](/web-ui/incidents) only for systems that manage an incident lifecycle, such as PagerDuty or SolarWinds Incident Response.
 
 ![Notification rules in light mode](/notification-rules-light.png)
 
@@ -10,7 +10,7 @@ Use notifications for ordinary message delivery: Microsoft Teams, Slack, Google 
 
 Notifications have two parts:
 
-- **Channels** are reusable destinations, such as Microsoft Teams, Slack, email, Telegram, or a generic webhook.
+- **Channels** are reusable destinations, such as Microsoft Teams, Slack, email, Telegram, a generic webhook, or a local command.
 - **Rules** decide which DAG-run events are sent to which channels.
 
 Rules can be configured at three levels:
@@ -56,6 +56,7 @@ Open **Notifications > Channels** to create destinations before adding rules.
 | **Email** | Send to one or more recipients through the configured SMTP transport. |
 | **Generic Webhook** | POST a structured payload to an incident system, chat relay, or internal service. |
 | **Telegram** | Send messages through a Telegram bot token and chat ID, optionally targeting a forum topic. |
+| **Custom** | Run a shell command on the Dagu server. See [Local Commands](#local-commands). |
 
 For Google Chat or another service without a dedicated channel type, use a generic webhook and customize its JSON body to match the receiver's payload format.
 
@@ -63,6 +64,9 @@ Dagu encrypts channel secrets at rest, including webhook URLs, HMAC secrets,
 SMTP passwords, OAuth client secrets, refresh tokens, service-account JSON, and
 bot tokens. The API never returns SMTP secret values; the UI shows whether each
 secret is configured after save.
+
+A local command is not a secret. Dagu stores and returns it as written, so
+anyone who can view channels can read it. Keep credentials out of the command.
 
 ### Microsoft Teams
 
@@ -144,6 +148,61 @@ Finish the provider setup before testing delivery. See
 [Email Notifications](/writing-workflows/email-notifications#smtp-providers)
 for Microsoft and Google setup instructions.
 
+### Local Commands
+
+A **Custom** channel runs a shell command on the Dagu server each time it delivers a notification. Use it for a destination without a channel type, such as a desktop notifier, a command-line client, or a local script. After saving, the channel list shows it as **Local command**.
+
+Local command channels need both of these:
+
+- **Admin role.** Only admins can create, edit, or test a local command channel. Testing a DAG's notifications also requires admin when the test would run one.
+- **DAG write and run permissions.** The server must set both `permissions.write_dags` and `permissions.run_dags` to `true`, which are the defaults. When either is `false`, Dagu hides the channel type, refuses to save or test local command channels, and fails their deliveries.
+
+Dagu runs the command as written, with `sh -c` on Unix and PowerShell on Windows (`pwsh`, or `powershell` when `pwsh` is not installed). [Message-template tokens](#message-templates) such as <code v-pre>{{run.error}}</code> are not replaced. Run values reach the command as environment variables instead:
+
+| Variable | Value |
+| --- | --- |
+| `DAG_NAME` | DAG name |
+| `DAG_RUN_ID` | DAG run ID |
+| `STATUS` | Run status |
+| `EVENT_TYPE` | Notification event type |
+| `ERROR` | Run error, the same value as <code v-pre>{{run.error}}</code> |
+| `FAILED_STEPS`, `PARTIALLY_SUCCEEDED_STEPS`, `ABORTED_STEPS`, `SUCCEEDED_STEPS` | Comma-separated steps with that status |
+| `RUN_PATH` | Relative Web UI path for the DAG run |
+| `RUN_URL` | Absolute Web UI URL for the DAG run, when [`public_url`](#dag-run-links) is configured |
+| `RUN_LINK` | `Run: ...` line when an absolute run URL is available |
+| `STARTED_AT`, `FINISHED_AT` | Run start and finish times |
+| `OBSERVED_AT` | Time the event was observed |
+| `ATTEMPT_ID` | Attempt ID |
+| `WORKSPACE` | Workspace name, when present |
+| `WORKER_ID` | Worker ID, when present |
+| `EXECUTION_LOG` | Path to a temporary file with the run's logs |
+
+Quote the variables, as in `"$ERROR"`, so a value with spaces or shell characters stays one argument and never runs as a command. PowerShell reads them as `$env:ERROR`.
+
+`EXECUTION_LOG` holds up to 1 MiB of the run: the DAG log, then each step's stdout and stderr, including lifecycle handlers. A longer log ends with `# log truncated`. The variable is empty when the run has no logs, and Dagu deletes the file after the command exits.
+
+For example, on a Linux desktop:
+
+```bash
+notify-send "Dagu" "DAG $DAG_NAME finished with status: $STATUS"
+```
+
+On Windows:
+
+```powershell
+Add-Content -Path C:\dagu\alerts.log -Value "$env:DAG_NAME $env:STATUS $env:ERROR"
+```
+
+Local commands follow these delivery rules:
+
+- The command runs on the host of the Dagu server or scheduler that delivers notifications, not on a distributed worker.
+- It starts from the same filtered environment as workflow steps, so it never sees Dagu's own credentials. See [Environment Variable Filtering](/server-admin/operations#environment-variable-filtering).
+- Dagu runs the command once per event. A non-zero exit fails delivery, and the error shows the start of the command's stderr. Stdout is discarded.
+- Dagu stops the command after 30 seconds. When the shell exits, Dagu also stops any process it left running, including processes started in the background.
+- Failed deliveries are retried. An event whose command already succeeded does not run again, but a command stopped by the timeout or a server shutdown can. Write commands that are safe to repeat.
+
+**Send test** runs the command once with a sample failed run of a DAG named `channel-test`.
+
 ## Rules
 
 Open **Notifications > Rules** to connect events to channels.
@@ -177,7 +236,7 @@ Keep DAG notifications inherited for most workflows. Configure a DAG override on
 
 ## Message Templates
 
-Each channel can customize the message text. Templates use simple <code v-pre>{{token}}</code> replacement.
+Each channel can customize the message text. Templates use simple <code v-pre>{{token}}</code> replacement. Local command channels do not use templates; they receive the same values as [environment variables](#local-commands).
 
 Common tokens:
 
@@ -299,6 +358,8 @@ The monitor remembers delivered events so a server restart does not replay old n
 ## Permissions
 
 Users need developer, manager, or admin permission to manage notification channels and rules.
+
+Local command channels are the exception: only admins can create, edit, or test them. Developers and managers can still add an existing local command channel to rules, so its command runs for the events those rules match.
 
 ## Related
 

@@ -80,7 +80,7 @@ docker run -d \
 - Email notifications
 
 **[Notifications](/web-ui/notifications)**
-- Reusable Microsoft Teams, Slack, email, Telegram, and webhook channels
+- Reusable Microsoft Teams, Slack, email, Telegram, webhook, and local command channels
 - Global and workspace notification rules
 - License requirements for team notification routing
 
