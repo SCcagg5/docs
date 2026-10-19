@@ -2,6 +2,8 @@
 
 Common paths: **Homebrew** (binary only), **npm** (binary only), or the **guided script installer** (optional LaunchAgent service and admin bootstrap).
 
+Prefer an app to the command line? [Kitewell](https://kitewell.app/download/) is a separate macOS app with the Dagu engine bundled, so there is no server or command line to set up.
+
 ## Homebrew
 
 ```bash
