@@ -8,6 +8,8 @@ The selected CLI attempt's binary must either be available in `PATH` or be refer
 
 To run CLI agents inside a container sandbox, see [Harness Sandboxed Execution](./sandbox/). This is the recommended shape when an AI or coding agent should run with explicit filesystem mounts, toolchains, network mode, external egress controls, and credentials.
 
+On your own Mac or Windows PC, [Kitewell](https://kitewell.app/download/), a separate desktop app with the Dagu engine bundled, finds the agent CLIs you have installed, runs them on your existing sign-ins, and adds them as steps without YAML.
+
 ## Supported Providers
 
 Dagu has built-in support for the following providers. Each adapter is pre-configured with the provider's non-interactive invocation and supplementary-input behavior:

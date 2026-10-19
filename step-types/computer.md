@@ -288,6 +288,8 @@ Answers are stored in the run's history, like other human input. Use `ask` for a
 
 ## Setting Up a Desktop Host
 
+[Kitewell](https://kitewell.app/download/), a separate macOS and Windows app with the Dagu engine bundled, handles this setup on your own computer: it checks desktop access and asks macOS for both permissions, and on Windows it runs desktop steps in your signed-in session. The screen still has to stay unlocked.
+
 A computer step operates the primary display of the session Dagu runs in. `dagu computer check` reports whether that works, as the user and in the session that runs the worker:
 
 ```text

@@ -1,5 +1,7 @@
 # macOS Service
 
+To run workflows on your own Mac without writing a LaunchAgent, [Kitewell](https://kitewell.app/download/) is a separate macOS app with the Dagu engine bundled. It runs the engine in the background and can start when you log in.
+
 ## Install Dagu via Homebrew
 
 ```bash
