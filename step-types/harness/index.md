@@ -8,7 +8,9 @@ The selected CLI attempt's binary must either be available in `PATH` or be refer
 
 To run CLI agents inside a container sandbox, see [Harness Sandboxed Execution](./sandbox/). This is the recommended shape when an AI or coding agent should run with explicit filesystem mounts, toolchains, network mode, external egress controls, and credentials.
 
-[Kitewell](https://kitewell.app/) is a separate desktop app for running coding agents on your own Mac or Windows PC without YAML.
+::: tip Prefer a desktop app?
+[Kitewell](https://kitewell.app/) is a separate app for running coding agents on your own Mac or Windows PC without YAML.
+:::
 
 ## Supported Providers
 

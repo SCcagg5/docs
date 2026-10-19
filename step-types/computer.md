@@ -8,7 +8,9 @@ Automate desktop applications that have no API, such as an ERP client or a legac
 
 Every model request goes through Dagu's own [LLM providers](/step-types/llm/providers), so the step uses the same `llm` configuration as `chat.completion`.
 
-[Kitewell](https://kitewell.app/) is a separate desktop app for automating desktop applications on your own Mac or Windows PC without YAML.
+::: tip Prefer a desktop app?
+[Kitewell](https://kitewell.app/) is a separate app for automating desktop applications on your own Mac or Windows PC without YAML.
+:::
 
 ## Requirements
 

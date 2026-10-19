@@ -8,7 +8,9 @@ Automate websites that have no API. A browser step drives a local Chrome with na
 
 Browser steps are powered by the [Stagehand](https://github.com/browserbase/stagehand) Go SDK. Every model request goes through Dagu's own [LLM providers](/step-types/llm/providers), so the step uses the same `llm` configuration as `chat.completion`, and API keys never enter the browser.
 
-[Kitewell](https://kitewell.app/) is a separate desktop app for automating websites on your own Mac or Windows PC without YAML.
+::: tip Prefer a desktop app?
+[Kitewell](https://kitewell.app/) is a separate app for automating websites on your own Mac or Windows PC without YAML.
+:::
 
 ## Requirements
 
