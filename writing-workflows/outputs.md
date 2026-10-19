@@ -158,6 +158,28 @@ Output names must match:
 
 Use names such as `version`, `image_tag`, `artifact_url`, or `record_count`.
 
+## Capturing Stdout
+
+Dagu never reads stdout for declared outputs, so a step that writes to `DAGU_OUTPUT_FILE` can print progress and logs to stdout freely.
+
+The string form `output: NAME` works differently. It captures the step's entire stdout, trims surrounding whitespace, and exposes the result to later steps as the environment variable `NAME`:
+
+```yaml
+steps:
+  - id: get_version
+    run: |
+      echo "Checking the build..."
+      echo "v1.2.3"
+    output: VERSION
+
+  - id: tag_image
+    depends: get_version
+    run: |
+      printf 'tag=%s\n' "$VERSION"
+```
+
+`VERSION` holds both lines, not just `v1.2.3`. Use `output: NAME` only for commands that print nothing but the value, such as `git rev-parse HEAD`. When the command also logs to stdout, declare `outputs` and write the value to `DAGU_OUTPUT_FILE` instead.
+
 ## Path Outputs
 
 Path-backed outputs are available only in `type: build` workflows:
