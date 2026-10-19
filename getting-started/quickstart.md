@@ -34,7 +34,7 @@ brew install dagu
 
 The script installers run a guided wizard for PATH setup, background service setup, and the first admin account. Homebrew, npm, and Docker install the binary or container only.
 
-Full options (specific versions, custom directories, service scope, uninstall, CI/non-interactive): [Installation Guide](/getting-started/installation/).
+Full options (specific versions, custom directories, service scope, uninstall, CI/non-interactive, desktop app): [Installation Guide](/getting-started/installation/).
 
 Verify:
 
