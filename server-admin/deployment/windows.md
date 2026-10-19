@@ -6,8 +6,6 @@ description: Run Dagu as a Windows service that starts with the computer, and kn
 
 The Windows installer can register Dagu as a Windows service that starts with the computer and restarts after a failure. The service is a version-pinned [WinSW](https://github.com/winsw/winsw) wrapper around `dagu start-all`.
 
-To run workflows on your own PC without setting up a service, [Kitewell](https://kitewell.app/download/) is a separate Windows app with the Dagu engine bundled. It runs scheduled workflows as your own user account, even when nobody is signed in.
-
 ## Install the Service
 
 Start PowerShell as Administrator and run:
