@@ -19,6 +19,7 @@ Pick the guide for your platform.
 | Situation | Install method |
 |---|---|
 | Trying Dagu locally on a laptop | **Homebrew** (macOS) or **script installer** (Linux/Windows) |
+| Want a desktop app, not a server or command line | [**Kitewell**](https://kitewell.app/download/), a separate macOS and Windows app with the Dagu engine bundled |
 | Running a shared server | **Script installer** with `--service yes` |
 | Running in a container | **Docker** |
 | Running on a cluster | **Kubernetes (Helm)** |
