@@ -69,6 +69,10 @@ flowchart LR
 
 ## Run your first workflow
 
+::: tip Prefer a desktop app?
+[Kitewell](https://kitewell.app/) is a separate app for running workflows on your own Mac or Windows PC without the command line.
+:::
+
 Install Dagu on Windows, macOS, or Linux:
 
 ::: code-group
@@ -83,7 +87,7 @@ curl -fsSL https://raw.githubusercontent.com/dagucloud/dagu/main/scripts/install
 
 :::
 
-The installers can add Dagu to your `PATH`, set up a background service, and create the first admin account. See [Installation](/getting-started/installation/) for Docker, Homebrew, npm, manual options, and a desktop app.
+The installers can add Dagu to your `PATH`, set up a background service, and create the first admin account. See [Installation](/getting-started/installation/) for Docker, Homebrew, npm, and manual options.
 
 Save this as `first-workflow.yaml`. Steps run after the steps they depend on; independent steps run in parallel:
 

@@ -8,6 +8,10 @@ From zero to a running workflow in under five minutes.
 
 ## 1. Install
 
+::: tip Prefer a desktop app?
+[Kitewell](https://kitewell.app/) is a separate app for running workflows on your own Mac or Windows PC without the command line.
+:::
+
 ::: code-group
 
 ```bash [macOS/Linux]
@@ -34,7 +38,7 @@ brew install dagu
 
 The script installers run a guided wizard for PATH setup, background service setup, and the first admin account. Homebrew, npm, and Docker install the binary or container only.
 
-Full options (specific versions, custom directories, service scope, uninstall, CI/non-interactive, desktop app): [Installation Guide](/getting-started/installation/).
+Full options (specific versions, custom directories, service scope, uninstall, CI/non-interactive): [Installation Guide](/getting-started/installation/).
 
 Verify:
 
