@@ -1,10 +1,10 @@
 ---
-description: When Dagu Console opens and resolves monitoring alerts, who gets the emails, how outside addresses are verified and unsubscribe, and how to mute a noisy workflow.
+description: When Dagu Console opens and resolves monitoring alerts, who gets the emails, how to send alerts to Slack and webhooks, how outside addresses are verified and unsubscribe, and how to mute a noisy workflow.
 ---
 
 # Monitoring Alerts and Email
 
-Dagu Console opens an alert when a workflow fails or a server stops reporting, and emails the workspace's alert recipients when it opens and when it resolves. See [Monitoring (Beta)](/overview/console-monitoring) to connect a server, and [Alerts](/overview/console-monitoring-pages#alerts) for the page that lists them.
+Dagu Console opens an alert when a workflow fails or a server stops reporting, and emails the workspace's alert recipients when it opens and when it resolves. On a paid plan, it also posts the alert to the workspace's [Slack channels and webhooks](#slack-and-webhooks). See [Monitoring (Beta)](/overview/console-monitoring) to connect a server, and [Alerts](/overview/console-monitoring-pages#alerts) for the page that lists them.
 
 ## Workflow Alerts
 
@@ -47,6 +47,51 @@ Every alert email ends with a link to unsubscribe, and mail clients that offer o
 
 An address that unsubscribed gets no alert emails from the workspace, even when it is added again. **Alert emails** shows it as **Unsubscribed**. Only the person at that address can subscribe again, with **Subscribe again** on the page the link opens.
 
+## Slack and Webhooks
+
+On a Team or Pro plan, a workspace owner adds up to 10 alert channels in **Settings** under **Slack and webhooks**. Each channel gets Dagu server alerts, Kitewell alerts, or both. An alert is posted to each channel that gets its product when it opens and when it resolves, one message per alert, as for its email. A pass posts at most 20 alerts to a channel and sums up the rest in one more message.
+
+- **Slack**: in Slack, add the **Incoming WebHooks** app to the channel, and paste the Webhook URL it gives, which starts with `https://hooks.slack.com/services/`. A message names what failed and where, quotes the end of its error when the server [sends errors](/overview/console-monitoring#what-is-sent), and has **View run** and, when the server has a [Dagu URL](/overview/console-monitoring-pages#servers), **Open in Dagu**.
+- **Webhook**: any `https://` URL on the public internet. Each alert is posted as JSON, and the page that adds the webhook shows its signing secret once.
+
+**Send test** posts a test message, at most once a minute. The channel's **Status** shows when it last took a post, or its last refusal. A post that the channel answers with 429 or a 5xx status is sent once more; an alert that neither an email nor a channel took is sent again later. Channel URLs and signing secrets are stored encrypted.
+
+A webhook post carries these headers:
+
+| Header | Value |
+| --- | --- |
+| `X-Dagu-Event` | `alert.opened`, `alert.resolved`, `alerts.more`, or `test` |
+| `X-Dagu-Delivery` | A random ID of the post |
+| `X-Dagu-Signature` | `t=<unix seconds>,v1=<hex>`: the HMAC-SHA256 of `t`, a `.`, and the body, keyed by the signing secret |
+
+```json
+{
+  "type": "alert.opened",
+  "sent_at": "2026-10-12T05:41:30Z",
+  "workspace_id": "<workspace>",
+  "alert": {
+    "id": 42,
+    "rule": "workflow_failed",
+    "workflow": "nightly-etl",
+    "host": { "kind": "dagu_server", "id": 7, "name": "etl-prod-1" },
+    "failures": 1,
+    "failed_steps": ["load"],
+    "errors": [{ "step": "load", "message": "exit status 1\nrecent stderr (tail):\nconnection refused" }],
+    "last_run_id": "0193f1c2a7d84e6b",
+    "opened_at": "2026-10-12T05:41:00Z",
+    "last_failed_at": "2026-10-12T05:41:00Z",
+    "resolved_at": null
+  },
+  "links": {
+    "alerts": "https://console.dagu.sh/alerts?ws=<workspace>",
+    "run": "https://console.dagu.sh/runs?run=0193f1c2a7d84e6b&server=7&ws=<workspace>",
+    "dagu": "https://dagu.example.com/dag-runs/nightly-etl/0193f1c2a7d84e6b?step=load"
+  }
+}
+```
+
+A stopped-reporting alert has `rule` `runner_offline` and no run. `errors` is present only when the server sends errors.
+
 ## Mute a Workflow
 
 A workspace owner mutes a noisy workflow from [its page](/overview/console-monitoring-pages#workflow-pages): **Mute**, then **For 1 hour**, **For 1 day**, **For 7 days**, or **Until unmuted**. **Unmute** ends it early.
@@ -67,7 +112,7 @@ On the **Alerts** page, **Emailed (UTC)** shows when an alert was emailed, or wh
 
 ## Example Email
 
-Alert emails are plain text. A failure and a recovery that happen together arrive as one email:
+Alert emails are plain text. A failure and a recovery that happen together arrive as one email. A failure quotes the last lines of its error when the server sends errors, and **Open in Dagu** appears when the server has a Dagu URL:
 
 ```text
 Subject: [Dagu] nightly-etl failed on etl-prod-1 (1 more alert)
@@ -76,6 +121,9 @@ Failed
 
 - nightly-etl on etl-prod-1 at 2026-10-12 05:41 UTC
   Run 0193f1c2a7d84e6b, failed at load
+    connection refused
+  View run: https://console.dagu.sh/runs?run=0193f1c2a7d84e6b&server=7&ws=<workspace>
+  Open in Dagu: https://dagu.example.com/dag-runs/nightly-etl/0193f1c2a7d84e6b?step=load
   Workflow: https://console.dagu.sh/workflows/12?ws=<workspace>
 
 Reporting again

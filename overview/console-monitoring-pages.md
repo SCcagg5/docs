@@ -8,9 +8,12 @@ The **Monitoring** group in [Dagu Console](https://console.dagu.sh)'s sidebar ho
 
 ## Overview
 
-- **Servers reporting**, **Failed today (UTC)**, **Open alerts**, and **Success (7 UTC days)**.
-- **Needs attention**: problems to act on, each naming the servers it affects: Not reporting, Not checking in, Offline, Scheduler stopped, Failing workflows, Events lost, Monitoring off, and, for owners, Over capacity.
-- **Open alerts** and **Failures today (UTC)**, up to 10 of each. Failures include aborted and rejected runs.
+- **Failed today (UTC)**, **Open alerts**, **In progress**, and **Success (7 UTC days)** with each day's runs.
+- **Needs attention**: problems to act on, each naming the servers it affects: Not reporting, Not checking in, Offline, Scheduler stopped, Failing workflows, Events lost, Monitoring off, and, for owners, Over capacity. Then the open alerts and today's failures, up to 10 of each, each with its failed steps, the last line of its error when the server [sends errors](/overview/console-monitoring#what-is-sent), and **Open in Dagu** when the server has a [Dagu URL](#dagu-url). Failures include aborted and rejected runs. With none of these, it shows **All clear**.
+- **In progress**: the runs queued, running, or waiting, latest first; a run waiting for someone stands out.
+- **Servers** and **Kitewell computers**: each by name, those with a problem first.
+
+Times show in your browser's time zone; day totals are by UTC day. On a Team or Pro plan, the Overview, Runs, Alerts, and server pages update themselves every 30 seconds while they are open.
 
 ## Servers
 
@@ -31,7 +34,11 @@ Each server's page has these tabs:
 - **Overview**: the server's details, such as its ID, Dagu version, OS and architecture, process start, last report, whether [stopped-reporting alerts](/overview/console-monitoring-alerts#stopped-reporting-alerts) are on, and last check-in; the services from the last report; open alerts; and failures in the last 14 days, or 7 on [free monitoring](/overview/console-monitoring#free-and-paid).
 - **Runs**: the server's runs.
 - **Workflows**: each workflow's finished runs per UTC day over the last 14 days as bars, with runs, failures, success rate, and average and longest duration. **Failing** marks a workflow with an open alert, and **Muted** a [muted](/overview/console-monitoring-alerts#mute-a-workflow) one.
-- **Settings**, for owners: **Alerts**, **Delete reports**, and **Disconnect server**.
+- **Settings**, for owners: **Name**, [Dagu URL](#dagu-url), **Alerts**, **Delete reports**, and **Disconnect server**.
+
+### Dagu URL
+
+The address this server's Dagu opens at in your browser, such as `https://dagu.example.com`. With it, failed runs, alerts, and alert emails link to the run in Dagu, at the step that failed, with **Open in Dagu**. Dagu Console never calls it; only your browser opens it.
 
 ## Runs
 
@@ -42,7 +49,7 @@ Runs in progress come first, then finished runs, newest recorded first. Filter b
 - **Status**: Failed (including aborted and rejected), Succeeded (including partially succeeded), Running, Waiting, or Queued
 - Range: **Last hour**, **Last 24 hours** (default), **Last 7 days**, or **Last 14 days**, by when Dagu Console recorded the run. Free monitoring shows up to **Last 7 days**.
 
-Each run has a permalink to a page that lists its attempts. A run in progress on a server that has not reported for 5 minutes shows **Unknown**. A workflow's name opens [its page](#workflow-pages).
+Each run has a permalink to a page with its status, start, duration, failed steps, and attempts. When the server [sends errors](/overview/console-monitoring#what-is-sent), the page shows **Why it failed**: each failed step's error in full, with **Copy**. Without them, it says how to have the server send them. A run in progress on a server that has not reported for 5 minutes shows **Unknown**. A workflow's name opens [its page](#workflow-pages).
 
 ## Alerts
 

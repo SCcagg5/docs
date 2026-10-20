@@ -11,7 +11,7 @@ Monitoring is in beta. The retention periods and limits on this page may change 
 Connect your Dagu servers to [Dagu Console](https://console.dagu.sh) and see all of them in one place:
 
 - **Every server at a glance**: which servers report, what failed today, open alerts, and what needs attention, such as a stopped scheduler or a server that went silent.
-- **Alerts by email**: when a workflow fails and when it recovers, and when a server stops reporting, to the members and addresses you choose.
+- **Alerts by email, Slack, or webhook**: when a workflow fails and when it recovers, and when a server stops reporting, to the members and addresses you choose, and on a paid plan to Slack channels and webhooks. Each alert links to its run.
 - **Trends**: runs, success rate, and p50 and p95 duration for each workflow over 7, 30, or 90 days.
 - **Nothing sensitive leaves the server**: reporting is opt-in, outbound HTTPS only, and carries metadata. Logs, outputs, parameters, and secrets are [never sent](#never-sent), and each server shows the exact JSON it last sent.
 - **Free for one server**: a workspace without a plan monitors one server at no cost, with the limits in [Free and Paid](#free-and-paid).
@@ -48,6 +48,7 @@ A workspace without a plan or trial monitors one server for free. Free monitorin
 | Run history shown | 7 days | 14 days |
 | Insights and workflow pages | 7 or 30 days | 7, 30, or 90 days |
 | Alert emails | Owners and admins | Owners, admins, and the members and addresses you add |
+| Slack channels and webhooks | None | Up to 10 per workspace |
 
 Starting a trial or a plan moves the free server onto it. Dagu picks up the new license at its next hourly check-in, or at once with **Check now** on **Plan & features**. When the plan or trial ends, the server returns to free monitoring at its next check-in, provided no other server holds the free slot.
 

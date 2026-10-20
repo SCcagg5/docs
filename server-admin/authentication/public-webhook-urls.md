@@ -31,8 +31,8 @@ GitHub, Stripe, Slack, ...
 
 | Plan | Public URLs per server |
 |------|------------------------|
-| Free monitoring (workspace without a plan) | 1 |
-| Trial, Team, or Pro | 1,000 |
+| Free monitoring (workspace without a plan) or a trial | 1 |
+| Team or Pro | 1,000 |
 
 ## Turn It On
 
