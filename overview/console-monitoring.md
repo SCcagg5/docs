@@ -1,5 +1,5 @@
 ---
-description: See every self-hosted Dagu server in one place, get an email when a workflow fails or a server stops reporting, and track trends. Free for one server. Opt-in, outbound HTTPS only, metadata only.
+description: See every self-hosted Dagu server in one place, get an email when a workflow fails or a server stops reporting, and track trends. Free for one server. Opt-in; logs and secrets stay on the server.
 ---
 
 # Monitoring (Beta)
@@ -13,7 +13,7 @@ Connect your Dagu servers to [Dagu Console](https://console.dagu.sh) and see all
 - **Every server at a glance**: which servers report, what failed today, open alerts, and what needs attention, such as a stopped scheduler or a server that went silent.
 - **Alerts by email, chat, PagerDuty, or webhook**: when a workflow fails and when it recovers, and when a server stops reporting, to the members and addresses you choose, and on a paid plan to Slack, Microsoft Teams, Google Chat, and Discord channels, PagerDuty services, and webhooks. Each alert links to its run.
 - **Trends**: runs, success rate, and p50 and p95 duration for each workflow over 7, 30, or 90 days.
-- **Nothing sensitive leaves the server**: reporting is opt-in, outbound HTTPS only, and carries metadata. Logs, outputs, parameters, and secrets are [never sent](#never-sent), and each server shows the exact JSON it last sent.
+- **Nothing sensitive leaves the server**: reporting is opt-in, outbound HTTPS only, and carries metadata, plus failed steps' [error messages](#error-messages) only at the level that names them. Full logs, outputs, parameters, and secrets are [never sent](#never-sent), and each server shows the exact JSON it last sent.
 - **Free for one server**: a workspace without a plan monitors one server at no cost, with the limits in [Free and Paid](#free-and-paid).
 
 ![Dagu Console Overview: two of three servers reporting, failures today, open alerts including a server that stopped reporting, and the 7-day success rate](/monitoring/overview-light.png)
@@ -54,7 +54,7 @@ Starting a trial or a plan moves the free server onto it. Dagu picks up the new 
 
 ## Get Your First Alert
 
-1. In Dagu, open **Plan & features** as an administrator. On the **Monitor this server for free** card, keep **Health and run status (recommended)** and select **Connect for free**. A server that already has a license connects with **Connect to Dagu Console** instead; then select **Turn on** in the **Monitoring** section and choose the same level.
+1. In Dagu, open **Plan & features** as an administrator. On the **Monitor this server for free** card, keep the level marked **(recommended)** and select **Connect for free**. A server that already has a license connects with **Connect to Dagu Console** instead; then select **Turn on** in the **Monitoring** section and choose the same level.
 2. Approve the server in Dagu Console. In a workspace without a plan, select **Connect for free monitoring**. Reporting starts as soon as the server connects.
 3. In Dagu Console, open **Settings**. Under **Alert emails**, owners and admins already get alert emails. With a trial or plan, add any other member or address there.
 4. Select **Send test** on a row to check that the email arrives.
@@ -68,7 +68,7 @@ Monitoring is off by default. Upgrading or connecting a server sends nothing bey
 ### From the web UI
 
 1. Open **Plan & features** as an administrator and select **Turn on** in the **Monitoring** section.
-2. Choose **Health and run status (recommended)** or **Health only**. The dialog lists exactly what each choice sends and what is never sent.
+2. Choose **Health only**, **Health and run status**, or, on Dagu v2.22 or later, **Health, run status, and error messages**, which is recommended there. The dialog lists exactly what each choice sends and what is never sent.
 3. Select **Turn on**.
 
 Dagu also asks on its own. When a server connects from **Plan & features** without a level chosen, it opens **Monitor this server from Dagu Console**. On a server that was connected earlier, administrators see a **Monitor this server from Dagu Console** notice above other pages until they choose a level or dismiss it.
@@ -87,7 +87,7 @@ For servers managed as code, set the level in the [configuration file](/server-a
 
 ```yaml
 cloud:
-  report: runs   # off, health, or runs
+  report: runs   # off, health, runs, or errors (v2.22 or later)
 ```
 
 or with `DAGU_CLOUD_REPORT=runs`.
@@ -98,6 +98,7 @@ or with `DAGU_CLOUD_REPORT=runs`.
 | `off` | Off | Nothing beyond the license check-in |
 | `health` | Health only | [Health](#health) |
 | `runs` | Health and run status | [Health](#health) and [run status](#run-status) |
+| `errors` (v2.22 or later) | Health, run status, and error messages | [Health](#health), [run status](#run-status), and [error messages](#error-messages) |
 
 A configured value, `off` included, wins over the choice in the web UI. The **Monitoring** section shows **Set in configuration** and offers no **Turn on**, **Change**, or **Turn off**. To change the level, change the configuration and restart Dagu.
 
@@ -105,7 +106,7 @@ A configured value, `off` included, wins over the choice in the web UI. The **Mo
 
 ### Health
 
-Sent at `health` and `runs`:
+Sent at `health`, `runs`, and `errors`:
 
 - Dagu version, operating system, and architecture
 - When the server process started
@@ -113,18 +114,28 @@ Sent at `health` and `runs`:
 
 ### Run status
 
-Sent at `runs` only:
+Sent at `runs` and `errors`:
 
 - **Each top-level run that finishes**, once: the DAG name, run ID, attempt ID, status (succeeded, partially succeeded, failed, aborted, or rejected), how it was triggered (scheduler, manual, webhook, retry, or catchup), when it was queued, started, and finished, and the names of its failed steps, up to 50.
 - **The runs in progress**: the runs queued, running, or waiting, with the same fields up to the start time. A report lists up to 200 of them, the most recently started or queued first, and the total count.
 
-DAG names and step names are sent only at `runs`. Choose `health` if you consider them sensitive.
+DAG names and step names are sent only at `runs` and `errors`. Choose `health` if you consider them sensitive.
+
+### Error messages
+
+Sent at `errors` only, on Dagu v2.22 or later. With them, Dagu Console shows why a run failed on its run page, and alert emails and chat posts quote the end of the error.
+
+- For each finished run that failed, was aborted, or was rejected: the error messages of its failed steps and handlers, in run order, up to 5, or the run's own error when no step has one.
+- Each is sent without terminal escapes and cut to its last 2048 bytes. A command step's error ends with the last 1 KiB of its stderr.
+- The values of workflow secrets are masked in them, as in logs.
+
+Error messages often contain hosts, paths, or data a step printed, and masking covers only the values of declared secrets. Choose `runs` if you would not send them.
 
 ### Never sent
 
-Logs, outputs, parameters, environment, step commands, DAG YAML, the values of workflow secrets, and error message text are never sent, at any level.
+Full logs, outputs, parameters, environment, step commands, DAG YAML, and the values of workflow secrets are never sent, at any level. Error messages are sent only at `errors`.
 
-Every report also carries what identifies and authenticates the server, as its license check-in does: the protocol version, license ID, server ID, and heartbeat secret. It also carries the level. At `runs`, it also carries the reporter's position in the event store and, after events were lost, the time they were lost from.
+Every report also carries what identifies and authenticates the server, as its license check-in does: the protocol version, license ID, server ID, and heartbeat secret. It also carries the level. At `runs` and `errors`, it also carries the reporter's position in the event store and, after events were lost, the time they were lost from.
 
 [RFC 002: Dagu Cloud Connector](https://github.com/dagucloud/dagu/blob/main/rfcs/002-dagu-cloud-connector.md) specifies the wire contract.
 

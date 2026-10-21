@@ -9,11 +9,11 @@ The **Monitoring** group in [Dagu Console](https://console.dagu.sh)'s sidebar ho
 ## Overview
 
 - **Failed today (UTC)**, **Open alerts**, **In progress**, and **Success (7 UTC days)** with each day's runs.
-- **Needs attention**: problems to act on, each naming the servers it affects: Not reporting, Not checking in, Offline, Scheduler stopped, Failing workflows, Events lost, Monitoring off, and, for owners, Over capacity. Then the open alerts and today's failures, up to 10 of each, each with its failed steps, the last line of its error when the server [sends errors](/overview/console-monitoring#what-is-sent), and **Open in Dagu** when the server has a [Dagu URL](#dagu-url). Failures include aborted and rejected runs. With none of these, it shows **All clear**.
+- **Needs attention**: problems to act on, each naming the servers it affects: Not reporting, Not checking in, Offline, Scheduler stopped, Failing workflows, Events lost, Monitoring off, and, for owners, Over capacity. Then the open alerts and today's failures, up to 10 of each, each with its failed steps, the last line of its error when the server [sends errors](/overview/console-monitoring#error-messages), and **Open in Dagu** when the server has a [Dagu URL](#dagu-url). Failures include aborted and rejected runs. With none of these, it shows **All clear**.
 - **In progress**: the runs queued, running, or waiting, latest first; a run waiting for someone stands out.
 - **Servers** and **Kitewell computers**: each by name, those with a problem first.
 
-When failures listed here say nothing of why, owners see a note above them: some servers [send no errors](/overview/console-monitoring#what-is-sent), with a link to the first one's license page in Dagu, or the workspace keeps no errors of Kitewell computers, with a link to **Settings**.
+When failures listed here say nothing of why, owners see a note above them: some servers [send no errors](/overview/console-monitoring#error-messages), with a link to the first one's license page in Dagu, or the workspace keeps no errors of Kitewell computers, with a link to **Settings**.
 
 Times show in your browser's time zone; day totals are by UTC day. On a Team or Pro plan, the Overview, Runs, Alerts, and server pages update themselves every 30 seconds while they are open.
 
@@ -51,7 +51,7 @@ Runs in progress come first, then finished runs, newest recorded first. Filter b
 - **Status**: Failed (including aborted and rejected), Succeeded (including partially succeeded), Running, Waiting, or Queued
 - Range: **Last hour**, **Last 24 hours** (default), **Last 7 days**, **Last 14 days**, or, on Team or Pro, **Last 30 days**, by when Dagu Console recorded the run. Free monitoring shows up to **Last 7 days**.
 
-Each run has a permalink to a page with its status, start, duration, failed steps, and attempts. When the server [sends errors](/overview/console-monitoring#what-is-sent), the page shows **Why it failed**: each failed step's error in full, with **Copy**. Without them, it says how to have the server send them. A run in progress on a server that has not reported for 5 minutes shows **Unknown**. A workflow's name opens [its page](#workflow-pages).
+Each run has a permalink to a page with its status, start, duration, failed steps, and attempts. When the server [sends errors](/overview/console-monitoring#error-messages), the page shows **Why it failed**: each failed step's error in full, with **Copy**. Without them, it says how to have the server send them. A run in progress on a server that has not reported for 5 minutes shows **Unknown**. A workflow's name opens [its page](#workflow-pages).
 
 ## Alerts
 

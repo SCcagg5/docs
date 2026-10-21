@@ -545,7 +545,7 @@ Legacy YAML keys `scheduler.heartbeat_interval`, `scheduler.heartbeat_sync_inter
 - `DAGU_LICENSE_SERVER_NAME` - Name this server reports to Dagu Console (`license.server_name`; default: the hostname). A name set in Dagu Console or Dagu is shown in its place
 
 ### Dagu Console Monitoring (Beta)
-- `DAGU_CLOUD_REPORT` - What the server reports to Dagu Console: `off`, `health`, or `runs` (`cloud.report`; default: empty, which reports nothing until an administrator chooses in the web UI). A set value, `off` included, fixes the level and the web UI shows it read-only. See [Monitoring (Beta)](/overview/console-monitoring).
+- `DAGU_CLOUD_REPORT` - What the server reports to Dagu Console: `off`, `health`, `runs`, or, on v2.22 or later, `errors` (`cloud.report`; default: empty, which reports nothing until an administrator chooses in the web UI). A set value, `off` included, fixes the level and the web UI shows it read-only. See [Monitoring (Beta)](/overview/console-monitoring).
 
 ### External Secrets
 - `DAGU_SECRETS_VAULT_ADDRESS` - Default Vault server address for the `vault` secret provider
