@@ -80,7 +80,7 @@ A webhook post carries these headers:
 
 | Header | Value |
 | --- | --- |
-| `X-Dagu-Event` | `alert.opened`, `alert.resolved`, `alerts.more`, or `test`. A `test` carries a sample alert, as **Send test** describes. |
+| `X-Dagu-Event` | `alert.opened`, `alert.reminder`, `alert.resolved`, `alerts.more`, or `test`. A `test` carries a sample alert, as **Send test** describes. |
 | `X-Dagu-Delivery` | The ID of the delivery, the same on every retry of it, to drop a post received twice |
 | `X-Dagu-Signature` | `t=<unix seconds>,v1=<hex>`: the HMAC-SHA256 of `t`, a `.`, and the body, keyed by the signing secret |
 
@@ -117,6 +117,12 @@ A stopped-reporting alert has `rule` `runner_offline` and no run. `errors` is pr
 Each alert has a page: select it on the **Alerts** page, or follow **View alert** in a chat post or **Acknowledge:** in an email. It shows what the alert is about, why its workflow failed, and a **Timeline** of when it opened, was emailed, was posted to each destination and how that went, was acknowledged, and resolved.
 
 Any member of the workspace selects **Acknowledge** on an open alert to say they are on it. The **Alerts** page then marks it **Acknowledged**, naming who on hover, and a [PagerDuty](#chat-pagerduty-and-webhooks) incident of the alert is acknowledged too. **Take back** undoes it. A resolved alert needs no acknowledgement.
+
+### Reminders
+
+On the **Notifications** page, a workspace owner sets **Reminders** to **Every hour**, **Every 4 hours**, or **Every day**. An open alert no one acknowledged is then posted again to its chat destinations and webhooks at that interval, up to 6 times, saying it is still failing, or still not reporting, with a link to its page. A webhook gets it as an `alert.reminder` event. PagerDuty is not reminded, since it escalates on its own. Reminders are part of paid plans.
+
+Acknowledging an alert stops its reminders. To pause them without acknowledging, any member selects **Snooze reminders** on the alert's page for 1 hour, 4 hours, or 1 day; **Resume reminders** ends the snooze early. Reminders and snoozes appear on the alert's **Timeline**. A muted workflow's alerts are not reminded of.
 
 ## Mute a Workflow
 
