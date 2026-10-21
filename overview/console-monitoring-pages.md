@@ -59,13 +59,13 @@ Each run has a permalink to a page with its status, start, duration, failed step
 
 **Open** and **Resolved** alerts, filtered by server. A workflow's alert shows the workflow, the server, when it opened, the last failure, the number of failures, the last run, and the failed steps. A server's [stopped-reporting alert](/overview/console-monitoring-alerts#stopped-reporting-alerts) shows how long the server has been silent, or was.
 
-**Emailed (UTC)** shows when the alert was emailed, or [why it was not](/overview/console-monitoring-alerts#emailed-column).
+**Notified** shows when the alert was told of, or [why it was not](/overview/console-monitoring-alerts#notified-column), and how its posts to each destination went.
 
 Owners see **Alert emails**, which opens the [recipients](/overview/console-monitoring-alerts#who-gets-alert-emails).
 
 ## Notifications
 
-For owners. Lists where the workspace's alerts go: the alert emails, and each [Slack or Teams channel, PagerDuty service, and webhook](/overview/console-monitoring-alerts#slack-teams-pagerduty-and-webhooks) with the products it gets, its status, and **Send test**. Selecting one opens its delivery log. **Add a destination** opens each kind's setup. Destinations are part of paid plans.
+For owners. Lists where the workspace's alerts go: the alert emails, and each [chat channel, PagerDuty service, and webhook](/overview/console-monitoring-alerts#chat-pagerduty-and-webhooks) with the products it gets, its status, and **Send test**. Selecting one opens its delivery log. **Add a destination** opens each kind's setup. Destinations are part of paid plans.
 
 ## Insights
 

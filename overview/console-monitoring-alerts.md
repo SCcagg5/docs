@@ -1,10 +1,10 @@
 ---
-description: When Dagu Console opens and resolves monitoring alerts, who gets the emails, how to send alerts to Slack, Microsoft Teams, PagerDuty, and webhooks, how outside addresses are verified and unsubscribe, and how to mute a noisy workflow.
+description: When Dagu Console opens and resolves monitoring alerts, who gets the emails, how to send alerts to Slack, Microsoft Teams, Google Chat, Discord, PagerDuty, and webhooks, how outside addresses are verified and unsubscribe, and how to mute a noisy workflow.
 ---
 
 # Monitoring Alerts and Email
 
-Dagu Console opens an alert when a workflow fails or a server stops reporting, and emails the workspace's alert recipients when it opens and when it resolves. On a paid plan, it also sends the alert to the workspace's [Slack and Microsoft Teams channels, PagerDuty services, and webhooks](#slack-teams-pagerduty-and-webhooks). See [Monitoring (Beta)](/overview/console-monitoring) to connect a server, and [Alerts](/overview/console-monitoring-pages#alerts) for the page that lists them.
+Dagu Console opens an alert when a workflow fails or a server stops reporting, and emails the workspace's alert recipients when it opens and when it resolves. On a paid plan, it also sends the alert to the workspace's [chat channels, PagerDuty services, and webhooks](#chat-pagerduty-and-webhooks). See [Monitoring (Beta)](/overview/console-monitoring) to connect a server, and [Alerts](/overview/console-monitoring-pages#alerts) for the page that lists them.
 
 ## Workflow Alerts
 
@@ -47,7 +47,7 @@ Every alert email ends with a link to unsubscribe, and mail clients that offer o
 
 An address that unsubscribed gets no alert emails from the workspace, even when it is added again. **Alert emails** shows it as **Unsubscribed**. Only the person at that address can subscribe again, with **Subscribe again** on the page the link opens.
 
-## Slack, Teams, PagerDuty, and Webhooks
+## Chat, PagerDuty, and Webhooks
 
 On a Team or Pro plan, a workspace owner adds up to 10 destinations on the **Notifications** page. Each one gets Dagu server alerts, Kitewell alerts, or both. An alert goes to each destination that gets its product when it opens and when it resolves, as for its email. Under **Add a destination**, each kind opens a short setup that says where to find what it needs.
 
@@ -55,15 +55,17 @@ On a Team or Pro plan, a workspace owner adds up to 10 destinations on the **Not
 | --- | --- | --- |
 | **Slack** | The Webhook URL of a Slack app's incoming webhook, which starts with `https://hooks.slack.com/services/`. Create an app at [api.slack.com/apps](https://api.slack.com/apps), turn on **Incoming Webhooks**, and select **Add New Webhook** for the channel. | One message per alert. |
 | **Microsoft Teams** | The URL of a Teams workflow. In the channel, select **More options** (⋯), then **Workflows**, and add **Post to a channel when a webhook request is received**. Office 365 connector URLs, which Microsoft retired, are refused. | One Adaptive Card per alert. |
+| **Google Chat** | The webhook URL of a space, which starts with `https://chat.googleapis.com/v1/spaces/`. In the space, select its name, then **Apps & integrations**, then **Add webhooks**. | One card per alert; its recovery replies in its failure's thread. |
+| **Discord** | The webhook URL of a channel, which starts with `https://discord.com/api/webhooks/`. In the channel's settings, select **Integrations**, then **Webhooks**, then **New Webhook**. | One embed per alert, which mentions no one. |
 | **PagerDuty** | The **Integration Key** of an **Events API V2** integration on the service, and its service region, US or EU. | An incident when an alert opens, resolved when the alert resolves. |
 | **Webhook** | Any `https://` URL on the public internet. The page that adds it shows its signing secret once. | One signed JSON post per alert. |
 
-- A Slack message or Teams card names what failed and where, quotes the end of its error when the server [sends errors](/overview/console-monitoring#what-is-sent), and has **View run** and, when the server has a [Dagu URL](/overview/console-monitoring-pages#servers), **Open in Dagu**. A pass sends at most 20 alerts to a chat channel or webhook and sums up the rest in one more message.
+- A chat post names what failed and where, quotes the end of its error when the server [sends errors](/overview/console-monitoring#what-is-sent), and has **View run** and, when the server has a [Dagu URL](/overview/console-monitoring-pages#servers), **Open in Dagu**. A pass sends at most 20 alerts to a chat channel or webhook and sums up the rest in one more message.
 - A PagerDuty incident's summary names what failed and the last line of its error. Its details carry the host, the workflow, the run, the failed steps, and the error, with links to the run. A workflow's failure has severity `error`, and a server that stopped reporting `critical`. Each alert is its own incident, keyed `dagu:<workspace>:<alert>`, so an event sent twice opens no second incident. Every alert of a pass is sent.
 
 **Send test** sends the workspace's last workflow alert of a product the destination gets, as it looked while failing, or an example when there is none, under a line saying it is a test. It runs at most once a minute.
 
-- Adding a Slack or Teams channel sends a test at once. Teams answers before it posts the card, so only the channel shows whether it arrived.
+- Adding a chat channel sends a test at once. Teams answers before it posts the card, so only the channel shows whether it arrived.
 - A PagerDuty test opens an incident and resolves it at once, so whoever is on call may be paged. The page asks before it is sent.
 
 The destination's **Status** shows when it last took a post, its last refusal, or how many posts wait to be tried again. Selecting a destination opens its page, which lists its latest 50 posts of alerts as **Sent**, **Retrying**, **Gave up**, **Skipped**, or **In a summary**, with each answer.
@@ -116,17 +118,19 @@ A workspace owner mutes a noisy workflow from [its page](/overview/console-monit
 
 While a workflow is muted, its alerts still open and resolve, marked **Muted**, but nobody is emailed. Muting covers a workflow's alerts only. A server that stops reporting is still emailed.
 
-## Emailed Column
+## Notified Column
 
-On the **Alerts** page, **Emailed (UTC)** shows when an alert was emailed, or why it was not:
+On the **Alerts** page, **Notified** shows when an alert was told of, or why it was not:
 
 | Shown | Meaning |
 | --- | --- |
-| A time | When the alert was emailed. |
+| A time | When the alert was emailed and its posts to [destinations](#chat-pagerduty-and-webhooks) were planned. |
 | **Pending** | The email is waiting to go out. |
 | **Not sent** | The alert resolved before its email went out. |
 | **No recipients** | No [alert recipient](#who-gets-alert-emails) gets Dagu server alerts. |
 | **Muted** | The alert opened while its workflow was [muted](#mute-a-workflow). |
+
+Beside the time, each destination its opening went to shows its mark, with a green dot once it was sent, an amber one while it is tried again, and a red one when it was given up on. A faded mark was skipped or folded into a summary. Hovering a mark names the destination and its status.
 
 ## Example Email
 
