@@ -1,10 +1,10 @@
 ---
-description: When Dagu Console opens and resolves monitoring alerts, who gets the emails, how to send alerts to Slack, Microsoft Teams, Google Chat, Discord, PagerDuty, and webhooks, how to acknowledge an alert, how outside addresses are verified and unsubscribe, and how to mute a noisy workflow.
+description: When Dagu Console opens and resolves monitoring alerts, including runs running too long, who gets the emails, how to send alerts to Slack, Microsoft Teams, Google Chat, Discord, PagerDuty, and webhooks, how to acknowledge an alert, how outside addresses are verified and unsubscribe, and how to mute a noisy workflow.
 ---
 
 # Monitoring Alerts and Email
 
-Dagu Console opens an alert when a workflow fails or a server stops reporting, and emails the workspace's alert recipients when it opens and when it resolves. On a paid plan, it also sends the alert to the workspace's [chat channels, PagerDuty services, and webhooks](#chat-pagerduty-and-webhooks). See [Monitoring (Beta)](/overview/console-monitoring) to connect a server, and [Alerts](/overview/console-monitoring-pages#alerts) for the page that lists them.
+Dagu Console opens an alert when a workflow fails, a server stops reporting, or, on a paid plan, a run runs [much longer than usual](#running-too-long-alerts). It emails the workspace's alert recipients when it opens and when it resolves. On a paid plan, it also sends the alert to the workspace's [chat channels, PagerDuty services, and webhooks](#chat-pagerduty-and-webhooks). See [Monitoring (Beta)](/overview/console-monitoring) to connect a server, and [Alerts](/overview/console-monitoring-pages#alerts) for the page that lists them.
 
 ## Workflow Alerts
 
@@ -23,6 +23,16 @@ A server that sends no report for 10 minutes, or 25 minutes on [free monitoring]
 - Every server that has reported is watched. To stop watching one, a workspace owner opens its **Settings** tab, clears **Alert when this server stops reporting** under **Alerts**, and selects **Save changes**. Turning it off closes an open alert without an email.
 - A server whose monitoring is turned off opens no alert. Turning monitoring off sends one last report that says so: the server shows **Monitoring off**, and an open stopped-reporting alert closes without an email.
 - When many servers stop reporting at the same moment, Dagu Console takes the problem to be on its own side and opens no alerts for them.
+
+## Running-Too-Long Alerts
+
+On a Team or Pro plan, a run still running well past its workflow's usual time opens an alert. These alerts need the `runs` level.
+
+- A workflow's limit is twice how long 95% of its runs took over the last 14 UTC days, and at least 10 minutes more. A workflow with fewer than 10 timed runs in that time has no limit.
+- Only a running run counts. A queued run, or one waiting for approval, does not.
+- A workflow has one such alert at a time. It names the oldest run past the limit, how long the workflow's runs usually take, and the limit.
+- It resolves when the run finishes, or when the server no longer lists the run in progress. A run that finishes as failed also opens the workflow's failure alert.
+- A server whose monitoring is turned off, or set to `health`, closes these alerts without an email.
 
 ## Who Gets Alert Emails
 
@@ -61,7 +71,7 @@ On a Team or Pro plan, a workspace owner adds up to 10 destinations on the **Not
 | **Webhook** | Any `https://` URL on the public internet. The page that adds it shows its signing secret once. | One signed JSON post per alert. |
 
 - A chat post names what failed and where, quotes the end of its error when the server [sends errors](/overview/console-monitoring#what-is-sent), and has **View run** and, when the server has a [Dagu URL](/overview/console-monitoring-pages#servers), **Open in Dagu**. A pass sends at most 20 alerts to a chat channel or webhook and sums up the rest in one more message.
-- A PagerDuty incident's summary names what failed and the last line of its error. Acknowledging the alert acknowledges the incident. Its details carry the host, the workflow, the run, the failed steps, and the error, with links to the run. A workflow's failure has severity `error`, and a server that stopped reporting `critical`. Each alert is its own incident, keyed `dagu:<workspace>:<alert>`, so an event sent twice opens no second incident. Every alert of a pass is sent.
+- A PagerDuty incident's summary names what failed and the last line of its error. Acknowledging the alert acknowledges the incident. Its details carry the host, the workflow, the run, the failed steps, and the error, with links to the run. A workflow's failure has severity `error`, a run running too long `warning`, and a server that stopped reporting `critical`. Each alert is its own incident, keyed `dagu:<workspace>:<alert>`, so an event sent twice opens no second incident. Every alert of a pass is sent.
 
 **Send test** sends the workspace's last workflow alert of a product the destination gets, as it looked while failing, or an example when there is none, under a line saying it is a test. It runs at most once a minute.
 
@@ -112,6 +122,8 @@ A webhook post carries these headers:
 
 A stopped-reporting alert has `rule` `runner_offline` and no run. `errors` is present only when the server sends errors.
 
+A [running-too-long alert](#running-too-long-alerts) has `rule` `run_too_long` and a `detail` object: `attempt_id`, `started_at`, `limit_ms`, `typical_ms` (the usual time), and `samples` (the timed runs it was measured over). Once resolved, `detail.resolution` is `finished`, `gone` (no longer listed in progress), or `unreported` (the server stopped telling of runs).
+
 ## Acknowledge an Alert
 
 Each alert has a page: select it on the **Alerts** page, or follow **View alert** in a chat post or **Acknowledge:** in an email. It shows what the alert is about, why its workflow failed, and a **Timeline** of when it opened, was emailed, was posted to each destination and how that went, was acknowledged, and resolved.
@@ -120,7 +132,7 @@ Any member of the workspace selects **Acknowledge** on an open alert to say they
 
 ### Reminders
 
-On the **Notifications** page, a workspace owner sets **Reminders** to **Every hour**, **Every 4 hours**, or **Every day**. An open alert no one acknowledged is then posted again to its chat destinations and webhooks at that interval, up to 6 times, saying it is still failing, or still not reporting, with a link to its page. A webhook gets it as an `alert.reminder` event. PagerDuty is not reminded, since it escalates on its own. Reminders are part of paid plans.
+On the **Notifications** page, a workspace owner sets **Reminders** to **Every hour**, **Every 4 hours**, or **Every day**. An open alert no one acknowledged is then posted again to its chat destinations and webhooks at that interval, up to 6 times, saying it is still failing, still running long, or still not reporting, with a link to its page. A webhook gets it as an `alert.reminder` event. PagerDuty is not reminded, since it escalates on its own. Reminders are part of paid plans.
 
 Acknowledging an alert stops its reminders. To pause them without acknowledging, any member selects **Snooze reminders** on the alert's page for 1 hour, 4 hours, or 1 day; **Resume reminders** ends the snooze early. Reminders and snoozes appear on the alert's **Timeline**. A muted workflow's alerts are not reminded of.
 
