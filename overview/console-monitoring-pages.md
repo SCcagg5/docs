@@ -4,7 +4,7 @@ description: What each Dagu Console monitoring page shows, from the fleet overvi
 
 # Monitoring Console Pages
 
-The **Monitoring** group in [Dagu Console](https://console.dagu.sh)'s sidebar holds these pages. Every member of the workspace can view them. Only workspace owners can delete reports, disconnect servers, mute workflows, and change who gets alert emails. See [Monitoring (Beta)](/overview/console-monitoring) to connect a server.
+The **Monitoring** group in [Dagu Console](https://console.dagu.sh)'s sidebar holds these pages. Every member of the workspace can view them. Only workspace owners can delete reports, disconnect servers, mute workflows, and change who gets alert emails and where alerts go. See [Monitoring (Beta)](/overview/console-monitoring) to connect a server.
 
 ## Overview
 
@@ -12,6 +12,8 @@ The **Monitoring** group in [Dagu Console](https://console.dagu.sh)'s sidebar ho
 - **Needs attention**: problems to act on, each naming the servers it affects: Not reporting, Not checking in, Offline, Scheduler stopped, Failing workflows, Events lost, Monitoring off, and, for owners, Over capacity. Then the open alerts and today's failures, up to 10 of each, each with its failed steps, the last line of its error when the server [sends errors](/overview/console-monitoring#what-is-sent), and **Open in Dagu** when the server has a [Dagu URL](#dagu-url). Failures include aborted and rejected runs. With none of these, it shows **All clear**.
 - **In progress**: the runs queued, running, or waiting, latest first; a run waiting for someone stands out.
 - **Servers** and **Kitewell computers**: each by name, those with a problem first.
+
+When failures listed here say nothing of why, owners see a note above them: some servers [send no errors](/overview/console-monitoring#what-is-sent), with a link to the first one's license page in Dagu, or the workspace keeps no errors of Kitewell computers, with a link to **Settings**.
 
 Times show in your browser's time zone; day totals are by UTC day. On a Team or Pro plan, the Overview, Runs, Alerts, and server pages update themselves every 30 seconds while they are open.
 
@@ -60,6 +62,10 @@ Each run has a permalink to a page with its status, start, duration, failed step
 **Emailed (UTC)** shows when the alert was emailed, or [why it was not](/overview/console-monitoring-alerts#emailed-column).
 
 Owners see **Alert emails**, which opens the [recipients](/overview/console-monitoring-alerts#who-gets-alert-emails).
+
+## Notifications
+
+For owners. Lists where the workspace's alerts go: the alert emails, and each [Slack or Teams channel, PagerDuty service, and webhook](/overview/console-monitoring-alerts#slack-teams-pagerduty-and-webhooks) with the products it gets, its status, and **Send test**. **Add a destination** opens each kind's setup. Destinations are part of paid plans.
 
 ## Insights
 
