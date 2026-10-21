@@ -52,6 +52,18 @@ A workspace owner chooses who is emailed in **Settings** under **Alert emails**.
 - **Time zone** sets the zone that times in alert emails and chat posts are shown in, such as `2026-10-12 14:41 JST`. Until an owner saves one, times are UTC and the field suggests the browser's zone. Daily run limits and usage still count UTC days.
 - An address that the email service refuses is skipped. The other recipients still get the email.
 
+## Weekly Summary
+
+On a Team or Pro plan, each owner gets a summary of the workspace's week every Monday from 8:00 in the workspace's [time zone](#who-gets-alert-emails), covering Monday to Sunday:
+
+- finished runs and their success rate, against the week before;
+- alerts opened and resolved, with the median time to acknowledge and to resolve them, and the longest;
+- the workflows that failed most, and those whose 95th-percentile duration grew most;
+- servers and computers that stopped reporting, and for how long;
+- destinations that stopped taking alerts.
+
+A week with no runs and no alerts sends no summary. To stop it for the whole workspace, an owner clears **Weekly summary** under **Alert emails** and selects **Save changes**. **Send me last week's summary** emails it to you at once, at most once a minute. Each summary ends with a link that stops it for its address only; alert emails do not change.
+
 ## Unsubscribe
 
 Every alert email ends with a link to unsubscribe, and mail clients that offer one-click unsubscribe can use it too. The link opens a page with **Unsubscribe**. Nothing changes until it is selected.
@@ -127,9 +139,9 @@ A [running-too-long alert](#running-too-long-alerts) has `rule` `run_too_long` a
 
 ## Acknowledge an Alert
 
-Each alert has a page: select it on the **Alerts** page, or follow **View alert** in a chat post or **Acknowledge:** in an email. It shows what the alert is about, why its workflow failed, and a **Timeline** of when it opened, was emailed, was posted to each destination and how that went, was acknowledged, and resolved.
+Each alert has a page: select it on the **Alerts** page, or follow **View alert** in a chat post or **Alert:** in an email. It shows what the alert is about, why its workflow failed, and a **Timeline** of when it opened, was emailed, was posted to each destination and how that went, was acknowledged, and resolved.
 
-Any member of the workspace selects **Acknowledge** on an open alert to say they are on it. The **Alerts** page then marks it **Acknowledged**, naming who on hover, and a [PagerDuty](#chat-pagerduty-and-webhooks) incident of the alert is acknowledged too. **Take back** undoes it. A resolved alert needs no acknowledgement.
+Any member of the workspace selects **Acknowledge** on an open alert to say they are on it. An alert email's **Acknowledge:** link does the same without signing in, as the address the email went to, for 7 days after the alert opened: opening it shows the alert, and **Acknowledge** on that page acknowledges it. The **Alerts** page then marks it **Acknowledged**, naming who on hover, and a [PagerDuty](#chat-pagerduty-and-webhooks) incident of the alert is acknowledged too. **Take back** undoes it. A resolved alert needs no acknowledgement.
 
 ### Reminders
 
@@ -172,7 +184,8 @@ Failed
   View run: https://console.dagu.sh/runs?run=0193f1c2a7d84e6b&server=7&ws=<workspace>
   Open in Dagu: https://dagu.example.com/dag-runs/nightly-etl/0193f1c2a7d84e6b?step=load
   Workflow: https://console.dagu.sh/workflows/12?ws=<workspace>
-  Acknowledge: https://console.dagu.sh/alerts/42?ws=<workspace>
+  Alert: https://console.dagu.sh/alerts/42?ws=<workspace>
+  Acknowledge: https://console.dagu.sh/alert-emails/acknowledge?a=42&t=<token>&w=<workspace>&x=<expiry>
 
 Reporting again
 
