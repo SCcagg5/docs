@@ -1,5 +1,5 @@
 ---
-description: When Dagu Console opens and resolves monitoring alerts, who gets the emails, how to send alerts to Slack, Microsoft Teams, Google Chat, Discord, PagerDuty, and webhooks, how outside addresses are verified and unsubscribe, and how to mute a noisy workflow.
+description: When Dagu Console opens and resolves monitoring alerts, who gets the emails, how to send alerts to Slack, Microsoft Teams, Google Chat, Discord, PagerDuty, and webhooks, how to acknowledge an alert, how outside addresses are verified and unsubscribe, and how to mute a noisy workflow.
 ---
 
 # Monitoring Alerts and Email
@@ -61,7 +61,7 @@ On a Team or Pro plan, a workspace owner adds up to 10 destinations on the **Not
 | **Webhook** | Any `https://` URL on the public internet. The page that adds it shows its signing secret once. | One signed JSON post per alert. |
 
 - A chat post names what failed and where, quotes the end of its error when the server [sends errors](/overview/console-monitoring#what-is-sent), and has **View run** and, when the server has a [Dagu URL](/overview/console-monitoring-pages#servers), **Open in Dagu**. A pass sends at most 20 alerts to a chat channel or webhook and sums up the rest in one more message.
-- A PagerDuty incident's summary names what failed and the last line of its error. Its details carry the host, the workflow, the run, the failed steps, and the error, with links to the run. A workflow's failure has severity `error`, and a server that stopped reporting `critical`. Each alert is its own incident, keyed `dagu:<workspace>:<alert>`, so an event sent twice opens no second incident. Every alert of a pass is sent.
+- A PagerDuty incident's summary names what failed and the last line of its error. Acknowledging the alert acknowledges the incident. Its details carry the host, the workflow, the run, the failed steps, and the error, with links to the run. A workflow's failure has severity `error`, and a server that stopped reporting `critical`. Each alert is its own incident, keyed `dagu:<workspace>:<alert>`, so an event sent twice opens no second incident. Every alert of a pass is sent.
 
 **Send test** sends the workspace's last workflow alert of a product the destination gets, as it looked while failing, or an example when there is none, under a line saying it is a test. It runs at most once a minute.
 
@@ -112,6 +112,12 @@ A webhook post carries these headers:
 
 A stopped-reporting alert has `rule` `runner_offline` and no run. `errors` is present only when the server sends errors.
 
+## Acknowledge an Alert
+
+Each alert has a page: select it on the **Alerts** page, or follow **View alert** in a chat post or **Acknowledge:** in an email. It shows what the alert is about, why its workflow failed, and a **Timeline** of when it opened, was emailed, was posted to each destination and how that went, was acknowledged, and resolved.
+
+Any member of the workspace selects **Acknowledge** on an open alert to say they are on it. The **Alerts** page then marks it **Acknowledged**, naming who on hover, and a [PagerDuty](#chat-pagerduty-and-webhooks) incident of the alert is acknowledged too. **Take back** undoes it. A resolved alert needs no acknowledgement.
+
 ## Mute a Workflow
 
 A workspace owner mutes a noisy workflow from [its page](/overview/console-monitoring-pages#workflow-pages): **Mute**, then **For 1 hour**, **For 1 day**, **For 7 days**, or **Until unmuted**. **Unmute** ends it early.
@@ -147,6 +153,7 @@ Failed
   View run: https://console.dagu.sh/runs?run=0193f1c2a7d84e6b&server=7&ws=<workspace>
   Open in Dagu: https://dagu.example.com/dag-runs/nightly-etl/0193f1c2a7d84e6b?step=load
   Workflow: https://console.dagu.sh/workflows/12?ws=<workspace>
+  Acknowledge: https://console.dagu.sh/alerts/42?ws=<workspace>
 
 Reporting again
 

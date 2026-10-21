@@ -4,7 +4,7 @@ description: What each Dagu Console monitoring page shows, from the fleet overvi
 
 # Monitoring Console Pages
 
-The **Monitoring** group in [Dagu Console](https://console.dagu.sh)'s sidebar holds these pages. Every member of the workspace can view them. Only workspace owners can delete reports, disconnect servers, mute workflows, and change who gets alert emails and where alerts go. See [Monitoring (Beta)](/overview/console-monitoring) to connect a server.
+The **Monitoring** group in [Dagu Console](https://console.dagu.sh)'s sidebar holds these pages. Every member of the workspace can view them. Any member can acknowledge an alert. Only workspace owners can delete reports, disconnect servers, mute workflows, and change who gets alert emails and where alerts go. See [Monitoring (Beta)](/overview/console-monitoring) to connect a server.
 
 ## Overview
 
@@ -57,7 +57,7 @@ Each run has a permalink to a page with its status, start, duration, failed step
 
 ![Open alerts: a server that stopped reporting, a muted workflow's failure, and a failing workflow with when each was emailed](/monitoring/alerts-light.png)
 
-**Open** and **Resolved** alerts, filtered by server. A workflow's alert shows the workflow, the server, when it opened, the last failure, the number of failures, the last run, and the failed steps. A server's [stopped-reporting alert](/overview/console-monitoring-alerts#stopped-reporting-alerts) shows how long the server has been silent, or was.
+**Open** and **Resolved** alerts, filtered by server. Selecting one opens its page, with why it failed, its timeline, and **Acknowledge**; see [Acknowledge an Alert](/overview/console-monitoring-alerts#acknowledge-an-alert). A workflow's alert shows the workflow, the server, when it opened, the last failure, the number of failures, the last run, and the failed steps. A server's [stopped-reporting alert](/overview/console-monitoring-alerts#stopped-reporting-alerts) shows how long the server has been silent, or was.
 
 **Notified** shows when the alert was told of, or [why it was not](/overview/console-monitoring-alerts#notified-column), and how its posts to each destination went.
 
