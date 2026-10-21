@@ -33,7 +33,7 @@ Times show in your browser's time zone; day totals are by UTC day. On a Team or 
 
 Each server's page has these tabs:
 
-- **Overview**: the server's details, such as its ID, Dagu version, OS and architecture, process start, last report, whether [stopped-reporting alerts](/overview/console-monitoring-alerts#stopped-reporting-alerts) are on, and last check-in; the services from the last report; open alerts; and failures in the last 14 days, or 7 on [free monitoring](/overview/console-monitoring#free-and-paid).
+- **Overview**: the server's details, such as its ID, Dagu version, OS and architecture, process start, last report, whether [stopped-reporting alerts](/overview/console-monitoring-alerts#stopped-reporting-alerts) are on, and last check-in; the services from the last report; open alerts; and failures as far back as runs show: 30 days on Team or Pro, 14 on a trial, or 7 on [free monitoring](/overview/console-monitoring#free-and-paid).
 - **Runs**: the server's runs.
 - **Workflows**: each workflow's finished runs per UTC day over the last 14 days as bars, with runs, failures, success rate, and average and longest duration. **Failing** marks a workflow with an open alert, and **Muted** a [muted](/overview/console-monitoring-alerts#mute-a-workflow) one.
 - **Settings**, for owners: **Name**, [Dagu URL](#dagu-url), **Alerts**, **Delete reports**, and **Disconnect server**.
@@ -49,7 +49,7 @@ Runs in progress come first, then finished runs, newest recorded first. Filter b
 - **Server**
 - **Workflow**
 - **Status**: Failed (including aborted and rejected), Succeeded (including partially succeeded), Running, Waiting, or Queued
-- Range: **Last hour**, **Last 24 hours** (default), **Last 7 days**, or **Last 14 days**, by when Dagu Console recorded the run. Free monitoring shows up to **Last 7 days**.
+- Range: **Last hour**, **Last 24 hours** (default), **Last 7 days**, **Last 14 days**, or, on Team or Pro, **Last 30 days**, by when Dagu Console recorded the run. Free monitoring shows up to **Last 7 days**.
 
 Each run has a permalink to a page with its status, start, duration, failed steps, and attempts. When the server [sends errors](/overview/console-monitoring#what-is-sent), the page shows **Why it failed**: each failed step's error in full, with **Copy**. Without them, it says how to have the server send them. A run in progress on a server that has not reported for 5 minutes shows **Unknown**. A workflow's name opens [its page](#workflow-pages).
 
@@ -88,7 +88,7 @@ A workflow's name in **Insights**, **Runs**, **Alerts**, or a server's **Workflo
 - **Details**: the workflow's key, server, last run, open alert, and whether it is muted.
 - Over 7, 30, or 90 UTC days: **Runs**, **Failed**, **Success**, and **p95**, with **Runs per day**, **Success rate**, and **Duration** (p50 and p95) charts.
 - **Recent runs**: the last 10 finished runs. **View all** lists the rest on **Runs**.
-- **Failures by step**: failed, aborted, and rejected runs over the last 14 days, or 7 on free monitoring, by the step they failed at.
+- **Failures by step**: failed, aborted, and rejected runs over the last 30 days on Team or Pro, 14 on a trial, or 7 on free monitoring, by the step they failed at.
 - For owners: **Mute** or **Unmute**.
 
 Dagu Console counts each day's run durations in ranges, from under a second to 8 hours or more, rather than keeping every duration. p50 and p95 are estimated from those ranges, so they show as approximate (≈), and they are never longer than the longest run. Days before 2026-10-13 (UTC) may have no estimate.

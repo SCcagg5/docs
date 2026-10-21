@@ -45,7 +45,7 @@ A workspace without a plan or trial monitors one server for free. Free monitorin
 | Reports | Every 5 minutes; early reports at most once every 30 seconds | Every 60 seconds; early reports within about 5 seconds |
 | Stopped-reporting alert | After 25 minutes without a report | After 10 minutes without a report |
 | Finished runs stored | 100 per UTC day | 500 per UTC day |
-| Run history shown | 7 days | 14 days |
+| Run history shown | 7 days | 14 days on a trial, 30 on Team or Pro |
 | Insights and workflow pages | 7 or 30 days | 7, 30, or 90 days |
 | Alert emails | Owners and admins | Owners, admins, and the members and addresses you add |
 | Chat, PagerDuty, and webhook destinations | None | Up to 10 per workspace |
@@ -146,7 +146,7 @@ During the beta, Dagu Console keeps:
 
 | Data | Kept for |
 | --- | --- |
-| Finished runs | 14 days, shown for 7 on free monitoring |
+| Finished runs | 30 days, shown for 7 on free monitoring and 14 on a trial |
 | Daily totals per workflow | 13 months |
 | Resolved alerts | 90 days after they resolve |
 | Open alerts | Until they resolve |
