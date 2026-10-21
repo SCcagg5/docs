@@ -65,7 +65,7 @@ Owners see **Alert emails**, which opens the [recipients](/overview/console-moni
 
 ## Notifications
 
-For owners. Lists where the workspace's alerts go: the alert emails, and each [Slack or Teams channel, PagerDuty service, and webhook](/overview/console-monitoring-alerts#slack-teams-pagerduty-and-webhooks) with the products it gets, its status, and **Send test**. **Add a destination** opens each kind's setup. Destinations are part of paid plans.
+For owners. Lists where the workspace's alerts go: the alert emails, and each [Slack or Teams channel, PagerDuty service, and webhook](/overview/console-monitoring-alerts#slack-teams-pagerduty-and-webhooks) with the products it gets, its status, and **Send test**. Selecting one opens its delivery log. **Add a destination** opens each kind's setup. Destinations are part of paid plans.
 
 ## Insights
 

@@ -66,14 +66,20 @@ On a Team or Pro plan, a workspace owner adds up to 10 destinations on the **Not
 - Adding a Slack or Teams channel sends a test at once. Teams answers before it posts the card, so only the channel shows whether it arrived.
 - A PagerDuty test opens an incident and resolves it at once, so whoever is on call may be paged. The page asks before it is sent.
 
-The destination's **Status** shows when it last took a post, or its last refusal. A post answered with 429 or a 5xx status is sent once more; an alert that neither an email nor a destination took is sent again later. Destination URLs, signing secrets, and integration keys are stored encrypted.
+The destination's **Status** shows when it last took a post, its last refusal, or how many posts wait to be tried again. Selecting a destination opens its page, which lists its latest 50 posts of alerts as **Sent**, **Retrying**, **Gave up**, **Skipped**, or **In a summary**, with each answer.
+
+- A refused post is tried again after 30 seconds, then after waits that double up to an hour, or after the wait a `Retry-After` header asks for, for up to a day. Each destination is tried on its own, so one that is down holds back no email or other destination.
+- An answer of 401, 403, 404, or 410 gives up on the post at once. Three in a row stop the destination: the **Notifications** page says so, and **Turn back on** on its page lets it take alerts again once it is fixed.
+- A resolution is posted only after its opening. An alert that resolves before its opening was posted is posted to neither.
+
+Destination URLs, signing secrets, and integration keys are stored encrypted.
 
 A webhook post carries these headers:
 
 | Header | Value |
 | --- | --- |
 | `X-Dagu-Event` | `alert.opened`, `alert.resolved`, `alerts.more`, or `test`. A `test` carries a sample alert, as **Send test** describes. |
-| `X-Dagu-Delivery` | A random ID of the post |
+| `X-Dagu-Delivery` | The ID of the delivery, the same on every retry of it, to drop a post received twice |
 | `X-Dagu-Signature` | `t=<unix seconds>,v1=<hex>`: the HMAC-SHA256 of `t`, a `.`, and the body, keyed by the signing secret |
 
 ```json
