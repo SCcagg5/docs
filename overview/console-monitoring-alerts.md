@@ -49,6 +49,7 @@ A workspace owner chooses who is emailed in **Settings** under **Alert emails**.
 - **Send test** emails the row a test alert. **Remove** takes a member or address off the list.
 - Up to 20 members and addresses besides owners and admins, of which up to 5 may wait to be verified. Verification and test emails are capped per workspace each UTC day.
 - **Email language** sets the language of alert, test, and verification emails: English (default), Français, 日本語, 简体中文, العربية, or 한국어.
+- **Time zone** sets the zone that times in alert emails and chat posts are shown in, such as `2026-10-12 14:41 JST`. Until an owner saves one, times are UTC and the field suggests the browser's zone. Daily run limits and usage still count UTC days.
 - An address that the email service refuses is skipped. The other recipients still get the email.
 
 ## Unsubscribe
@@ -134,7 +135,7 @@ Any member of the workspace selects **Acknowledge** on an open alert to say they
 
 On the **Notifications** page, a workspace owner sets **Reminders** to **Every hour**, **Every 4 hours**, or **Every day**. An open alert no one acknowledged is then posted again to its chat destinations and webhooks at that interval, up to 6 times, saying it is still failing, still running long, or still not reporting, with a link to its page. A webhook gets it as an `alert.reminder` event. PagerDuty is not reminded, since it escalates on its own. Reminders are part of paid plans.
 
-Acknowledging an alert stops its reminders. To pause them without acknowledging, any member selects **Snooze reminders** on the alert's page for 1 hour, 4 hours, or 1 day; **Resume reminders** ends the snooze early. Reminders and snoozes appear on the alert's **Timeline**. A muted workflow's alerts are not reminded of.
+Acknowledging an alert stops its reminders. To pause them without acknowledging, any member selects **Snooze reminders** on the alert's page for 1 hour, 4 hours, 1 day, or until 9:00 in the workspace's [time zone](#who-gets-alert-emails); **Resume reminders** ends the snooze early. Reminders and snoozes appear on the alert's **Timeline**. A muted workflow's alerts are not reminded of.
 
 ## Mute a Workflow
 
