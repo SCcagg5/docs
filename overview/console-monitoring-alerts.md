@@ -1,5 +1,5 @@
 ---
-description: When Dagu Console opens and resolves monitoring alerts, including runs running too long, who gets the emails, how to send alerts to Slack, Microsoft Teams, Google Chat, Discord, PagerDuty, and webhooks, how to acknowledge an alert, how outside addresses are verified and unsubscribe, and how to mute a noisy workflow.
+description: When Dagu Console opens and resolves monitoring alerts, who gets the emails, how to send alerts to chat, PagerDuty, and webhooks, and how to acknowledge, snooze, or mute them.
 ---
 
 # Monitoring Alerts and Email
