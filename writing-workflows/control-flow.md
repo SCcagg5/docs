@@ -770,6 +770,26 @@ steps:
 To poll the status URL of an HTTP job until the job finishes, see
 [Poll an Asynchronous Job](/step-types/http#poll-an-asynchronous-job).
 
+### Repeat Without a Condition
+
+With neither `condition` nor `exit_code`, the result of each attempt decides:
+`while` repeats while the attempt succeeds, and `until` repeats until it
+succeeds. `limit` caps both.
+
+```yaml
+steps:
+  - id: sync
+    run: ./sync.sh
+    repeat_policy:
+      repeat: until       # Repeat UNTIL sync.sh succeeds
+      interval_sec: 30
+      limit: 10           # At most 10 executions
+```
+
+A failed attempt stops a `while` repeat and fails the step, and an `until`
+step whose last allowed attempt fails also fails. A `retry_policy` retries a
+failed attempt before the repeat decision.
+
 ### Stopping a Repeating Step
 
 When a run is stopped while a repeating step is between attempts, for example while it checks its repeat condition or waits for `interval_sec`, the pending repetition is canceled and the step ends as aborted, as does the run. An attempt that is already running when the stop arrives can finish within the DAG's [cleanup time](/writing-workflows/execution-control#cleanup-timeout), and the step then keeps that attempt's result instead of repeating.

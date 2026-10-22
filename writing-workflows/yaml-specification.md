@@ -1172,7 +1172,7 @@ steps:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `repeat` | string or boolean | `while`, `until`, or legacy `true` for `while`. |
+| `repeat` | string or boolean | `while`, `until`, or legacy `true` for `while`. Without `condition` or `exit_code`, `while` repeats while the attempt succeeds and `until` repeats until it succeeds. |
 | `interval_sec` | integer or string | Delay between repetitions. |
 | `backoff` | boolean or number | Exponential backoff multiplier. |
 | `max_interval_sec` | integer or string | Maximum repetition interval. |
