@@ -9,6 +9,9 @@ Without `container:`, a CLI harness provider runs as a process on the Dagu
 worker. With `container:`, the provider binary must exist inside the configured
 container image or existing container.
 
+To run a provider in a microVM instead of a container, see
+[Docker Sandboxes (sbx)](./sbx).
+
 ## Container Shapes
 
 | Shape | Behavior |
@@ -184,6 +187,7 @@ that DAG.
 
 - [Docker](./docker)
 - [Podman](./podman)
+- [Docker Sandboxes (sbx)](./sbx)
 - [Runner images](./images)
 - [Credentials](./credentials)
 - [Codex](./codex)

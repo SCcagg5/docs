@@ -57,6 +57,7 @@ const harnessItems = [
       { text: "Overview", link: "/step-types/harness/sandbox/" },
       { text: "Docker", link: "/step-types/harness/sandbox/docker" },
       { text: "Podman", link: "/step-types/harness/sandbox/podman" },
+      { text: "Docker Sandboxes (sbx)", link: "/step-types/harness/sandbox/sbx" },
       { text: "Runner Images", link: "/step-types/harness/sandbox/images" },
       { text: "Credentials", link: "/step-types/harness/sandbox/credentials" },
       { text: "Codex", link: "/step-types/harness/sandbox/codex" },
