@@ -88,7 +88,7 @@ A workflow's name in **Insights**, **Runs**, **Alerts**, or a server's **Workflo
 - **Details**: the workflow's key, server, last run, open alert, and whether it is muted.
 - Over 7, 30, or 90 UTC days: **Runs**, **Failed**, **Success**, and **p95**, with **Runs per day**, **Success rate**, and **Duration** (p50 and p95) charts.
 - **Recent runs**: the last 10 finished runs. **View all** lists the rest on **Runs**.
-- **Failures by step**: failed, aborted, and rejected runs over the last 30 days on Team or Pro, 14 on a trial, or 7 on free monitoring, by the step they failed at.
+- **Failures by step**: failed, aborted, and rejected runs over the last 30 days on a trial, Team, or Pro, or 7 on free monitoring, by the step they failed at.
 - For owners: **Mute** or **Unmute**.
 
 Dagu Console counts each day's run durations in ranges, from under a second to 8 hours or more, rather than keeping every duration. p50 and p95 are estimated from those ranges, so they show as approximate (≈), and they are never longer than the longest run. Days before 2026-10-13 (UTC) may have no estimate.

@@ -40,11 +40,13 @@ Connecting shares only the license check-in, unless the server's [Monitoring (Be
 
 ### From the web UI
 
-1. Open **Plan & features** as an administrator and select **Connect to Dagu Console**. On a Community server, **Connect for free** on the **Monitor this server for free** card does the same, and the server reports at the level chosen on the card once it connects.
-2. Dagu Console opens in a new tab. Sign in, check that it shows the same code as Dagu, choose the workspace, and approve the server.
-3. Dagu loads the license within a few seconds. The **This server** panel shows the server's name, workspace, last check-in, and a link to the server in Dagu Console.
+1. Open **Plan & features** as an administrator. On the **Monitor this server for free** card, choose what the server reports and select **Connect for free**. To start the 14-day trial of paid features in the same step, also select **Also try paid features free for 14 days**.
+2. Dagu Console opens in a new tab. Sign in or sign up, check that it shows the same code as Dagu, choose the workspace, and approve the server. Dagu waits up to an hour for the approval.
+3. Dagu loads the license within a few seconds. The **Overview** shows the server's name, workspace, last check-in, and a link to the server in Dagu Console.
 
-`dagu license activate` without a key does the same from a shell, which helps when the server's web UI is not reachable from your browser.
+`dagu license activate` without a key does the same from a shell, which helps when the server's web UI is not reachable from your browser. On Dagu v2.22 or later, `--report` sets what the server reports; see [From the command line](/overview/console-monitoring#from-the-command-line).
+
+A server on free monitoring starts the trial with **Start free trial** on **Plan & features**, which opens its page in Dagu Console.
 
 ### With a server key
 
@@ -77,7 +79,7 @@ Dagu stores the server's ID and license in the `license` folder of the data dire
 
 ### Check-ins and disconnecting
 
-Connected servers check in with Dagu Console every hour. **Check now** on **Plan & features** checks in immediately, for example after changing plans.
+Connected servers check in with Dagu Console every hour, and right away when Dagu Console moves them to another license, as when a trial starts, while monitoring is on. **Plan & features** also checks in when you come back to it from Dagu Console, and **Check now** checks in immediately.
 
 - **Disconnect** on **Plan & features**, or `dagu license deactivate`, frees the slot right away.
 - **Disconnect** on the console's **Servers** page frees the slot and the server stops using the license at its next check-in. A server whose configuration still has the server key connects again when it restarts; generate a new key to prevent that.
