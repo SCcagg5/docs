@@ -604,7 +604,7 @@ Configure tracing for all DAGs:
 # base.yaml
 otel:
   enabled: true
-  endpoint: http://otel-collector:4317
+  endpoint: otel-collector:4317
   insecure: true
   headers:
     Authorization: Bearer ${env.OTEL_TOKEN}

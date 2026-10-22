@@ -36,7 +36,7 @@ otel:
   # endpoint: "http://otel-collector:4318/v1/traces"  # OTLP HTTP endpoint
   headers:
     Authorization: "Bearer ${env.OTEL_AUTH_TOKEN}"
-  insecure: false  # Skip TLS verification (default: false)
+  insecure: false  # Send plaintext instead of TLS (default: false)
   timeout: 30s     # Export timeout
   resource:
     # Resource attributes (all optional)
@@ -70,6 +70,8 @@ Dagu automatically detects the protocol based on the endpoint:
 
 - **gRPC endpoints**: `host:port` format (e.g., `localhost:4317`)
 - **HTTP endpoints**: Must end with `/v1/traces` (e.g., `http://localhost:4318/v1/traces`)
+
+An HTTP endpoint is a URL or a bare `host:port/v1/traces`, such as `localhost:4318/v1/traces`. For a URL, the scheme decides the transport and overrides `insecure`: `http://` sends plaintext and `https://` uses TLS. A bare endpoint uses TLS unless `insecure: true`. Any other scheme is an error; Dagu logs a warning and runs the DAG without tracing.
 
 ## Trace Structure
 
@@ -126,6 +128,30 @@ DAG: parent-workflow (trace_id: abc123)
     └── DAG: child-workflow (same trace_id: abc123)
         ├── Step: child-step-1
         └── Step: child-step-2
+```
+
+## Step Process Trace Context
+
+When tracing is enabled, Dagu puts the W3C trace context of each step span into that step's environment, so a traced tool that a `run` command starts can record its spans as children of the step:
+
+- `TRACEPARENT` names the trace of the DAG run and the span of the current step. `TRACESTATE` is set when the step span has a trace state.
+- These values replace a `TRACEPARENT` or `TRACESTATE` the step would otherwise inherit, such as one from the DAG-level `env`. An inherited `TRACESTATE` becomes empty when the step span has none, since it belongs to another span.
+- When the step's own `env` sets either variable, Dagu sets neither, and an inherited value of the other becomes empty. Set `TRACEPARENT` to an empty string to give the process no trace context.
+- Lifecycle handlers have no step span, and Dagu sets neither variable for them.
+- With tracing off, Dagu sets neither variable.
+
+```yaml
+otel:
+  enabled: true
+  endpoint: "localhost:4317"
+steps:
+  - id: traced
+    run: ./export.sh        # receives the step span as TRACEPARENT
+  - id: untraced
+    depends: traced
+    env:
+      - TRACEPARENT: ""     # no trace context for this process
+    run: ./legacy.sh
 ```
 
 ## Using Base Configuration
