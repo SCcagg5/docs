@@ -1147,13 +1147,13 @@ Use `--yes` to skip prompts in automation. Self-upgrade is unavailable for packa
 Connect to Dagu Console, activate, deactivate, or check Dagu license status.
 
 ```bash
-dagu license activate
+dagu license activate [--report errors|runs|health|off]
 dagu license activate <key>
 dagu license check
 dagu license deactivate
 ```
 
-- `activate` without a key prints a Dagu Console URL and a short code, then waits up to 15 minutes for a workspace owner to approve this server. Open the URL in any browser; the license is saved once the request is approved. Press Ctrl-C to cancel. Without a terminal, for example in a script, it fails at once instead of waiting. See [Connect a Server](/overview/self-host-license#connect-a-server).
+- `activate` without a key asks what the server reports to Dagu Console, unless `--report` or `cloud.report` sets it, then prints a Dagu Console URL and a short code and waits up to an hour for a workspace owner to approve this server. Open the URL in any browser; the license and the report level are saved once the request is approved. Press Ctrl-C to cancel. Without a terminal, for example in a script, it fails at once instead of waiting. See [Connect a Server](/overview/self-host-license#connect-a-server).
 - `activate <key>` exchanges a server key or license key from Dagu Console for a license.
 - `check` prints the plan, features, expiry, and status, plus the workspace, server name and ID, license ID, how the license reached this server, the last check-in, and the server's Dagu Console page.
 - `deactivate` frees the server's slot in Dagu Console and returns to community mode. If the console cannot be reached, the server still deactivates locally and prints the Dagu Console page where you can disconnect it.
