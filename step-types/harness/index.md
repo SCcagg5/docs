@@ -1,6 +1,6 @@
 # Harness
 
-Run coding agents as workflow steps. Harnesses run external CLI agents on the host or inside a container.
+Run coding agents as workflow steps. Harnesses run external CLI agents on the host or inside a container, or connect to agents over the [Agent Client Protocol](./acp) (ACP).
 
 For CLI providers, the harness executor normally starts a subprocess, captures stdout and stderr, and uses the process exit status as the step result. Built-in OpenCode steps use a managed server session by default on long-lived Dagu execution hosts; see [OpenCode](./opencode).
 
@@ -37,7 +37,7 @@ Dagu has built-in support for the following providers. Each adapter is pre-confi
 
 Codex enables `skip_git_repo_check` by default, Cursor defaults to `output_format: text`, Goose defaults to `quiet: true`, and Kilo Code defaults to `auto: true` so the agent runs unattended. Explicit values under `with` override these defaults. The `deepseek` adapter targets the official DeepSeek Harness `dsh` CLI in its headless profile; it does not select DeepSeek as another harness's model backend.
 
-You can also define [custom harness definitions](#custom-harness-definitions) for any CLI agent. The [Hermes Agent guide](./hermes) is a complete custom-provider example.
+You can also define [custom harness definitions](#custom-harness-definitions) for any CLI agent. The [Hermes Agent guide](./hermes) is a complete custom-provider example. For agents that speak ACP, locally or on another host, see [ACP Agents](./acp).
 
 ## Step Contract
 
@@ -163,7 +163,8 @@ Custom harness definition fields:
 
 | Field | Type | Required | Default | Meaning |
 |-------|------|----------|---------|---------|
-| `binary` | string | yes | - | CLI binary name or path |
+| `protocol` | `cli` \| `acp` | no | `cli` | CLI invocation, or an [ACP connection](./acp) |
+| `binary` | string | yes, except for [remote ACP](./acp#remote-agent) | - | CLI binary name or path |
 | `prefix_args` | string[] | no | `[]` | Arguments emitted before prompt placement and generated flags |
 | `prompt_mode` | `arg` \| `flag` \| `stdin` | no | `arg` | How the prompt is passed |
 | `prompt_flag` | string | only for `flag` mode | - | Exact flag token used for the prompt |
@@ -176,6 +177,7 @@ Rules enforced by Dagu:
 - a non-null custom definition shadows a [built-in provider](#supported-providers) with the same name; removing that definition exposes the built-in again
 - `prompt_flag` is valid only when `prompt_mode: flag`
 - unknown keys inside a harness definition are rejected
+- ACP definitions add transport and connection fields; see [ACP Agents](./acp#definition-fields)
 
 ### Custom Prompt Placement
 
@@ -298,7 +300,7 @@ Additional details:
 - built-in CLI providers normalize `snake_case` keys to kebab-case flag names, so `max_turns` becomes `--max-turns`
 - custom harness definitions keep keys as written unless `option_flags` overrides them
 - keys are emitted in lexicographic order for deterministic argv generation
-- reserved keys are `prompt`, `stdin`, `provider`, `fallback`, and `managed`
+- reserved keys are `prompt`, `stdin`, `provider`, `fallback`, `managed`, and `acp_permission`
 - Dagu does not validate provider-specific flag names or values
 
 ## DAG-Level Defaults
@@ -333,6 +335,7 @@ Merge rules:
 - DAG-level `harness:` is the base config for every harness step
 - step-level `with:` overrides primary keys from DAG-level `harness:`
 - step-level `with.fallback` replaces the DAG-level fallback list; it is not merged
+- remote [ACP](./acp#dag-level-defaults) steps inherit only `provider` and `acp_permission`, because a remote agent takes no CLI flags
 
 ## Fallbacks
 
@@ -384,5 +387,7 @@ Interpolated scalar strings are normalized before flags are generated, so values
 | `0` | CLI completed successfully |
 | `124` | Step context was cancelled or timed out |
 | any other non-zero value | The child process exit code, or `1` when setup failed before a process exit code existed |
+
+An explicit stop of an [ACP](./acp#stopping-and-timeouts) step reports the signal exit code, normally `143`, or `137` when forced.
 
 On failure, Dagu includes the last 1024 bytes of stderr in the returned error message.

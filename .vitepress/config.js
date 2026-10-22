@@ -46,6 +46,7 @@ const harnessItems = [
       { text: "Hermes Agent", link: "/step-types/harness/hermes" },
       { text: "OpenCode", link: "/step-types/harness/opencode" },
       { text: "Pi", link: "/step-types/harness/pi" },
+      { text: "ACP Agents", link: "/step-types/harness/acp" },
       { text: "Custom Harness", link: "/step-types/harness/#custom-harness-definitions" },
     ],
   },

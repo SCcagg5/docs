@@ -897,7 +897,7 @@ Accepted built-in action names:
 | `file.copy`, `file.delete`, `file.list`, `file.mkdir`, `file.move`, `file.read`, `file.stat`, `file.write` | File operations. |
 | `git.checkout` | Clone or update a Git repository. |
 | `git.worktree.add`, `git.worktree.remove` | Create, reuse, and remove linked worktrees in a local Git repository. See [Git](/step-types/git#linked-worktrees). |
-| `harness.run` | CLI coding-agent harness execution. |
+| `harness.run` | Coding-agent harness execution through a CLI or an [ACP](/step-types/harness/acp) connection. |
 | `human.task` | Wait for acknowledgement or typed operator input in a root DAG. |
 | `http.request` | HTTP requests. |
 | `jq.filter` | jq transforms. |
