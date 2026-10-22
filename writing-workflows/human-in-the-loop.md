@@ -118,6 +118,6 @@ See [Push-back Context](/writing-workflows/runtime-variables#push-back-context-d
 | Web UI | **Human tasks** tab: **Complete task**, **Request changes** | **Approval** tab: **Approve**, **Retry**; **Reject** in the run's action bar |
 | REST API | [Human Task Endpoints](/web-ui/api#human-task-endpoints) | [Approval Endpoints](/web-ui/api#approval-endpoints) |
 | CLI | [`dagu human-task complete`](/getting-started/cli#human-task-complete), [`dagu human-task push-back`](/getting-started/cli#human-task-push-back) | Not available |
-| MCP | Not available | Not available |
+| MCP | [`dagu_execute`](/mcp/tools#deciding-waiting-steps) `approve`, `push_back` | [`dagu_execute`](/mcp/tools#deciding-waiting-steps) `approve`, `push_back`, `reject` |
 
-Acting on a waiting step requires permission to run DAGs in its workspace. The run records who acted: the authenticated user for Web UI and REST API actions, and the OS user for the local CLI.
+Acting on a waiting step requires permission to run DAGs in its workspace. The run records who acted: the authenticated user for Web UI, REST API, and MCP actions, and the OS user for the local CLI.

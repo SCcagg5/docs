@@ -285,7 +285,9 @@ monitoring:
 
 # Dagu Console Monitoring (Beta)
 cloud:
-  report: ""              # "off", "health", or "runs"; empty (default) = choose in the web UI
+  report: ""              # "off", "health", "runs", or "errors"; empty (default) = choose in the web UI
+  remote_access: ""       # "off", "viewer", "operator", or "developer"; empty (default) = choose in the web UI
+  # remote_approvals: true # Let Dagu Cloud calls decide waiting steps; omit (default) to choose in the web UI
 
 # Git Sync
 git_sync:
@@ -568,6 +570,8 @@ Legacy YAML keys `scheduler.heartbeat_interval` and `scheduler.stale_threshold` 
 
 ### Dagu Console Monitoring (Beta)
 - `DAGU_CLOUD_REPORT` - What the server reports to Dagu Console: `off`, `health`, `runs`, or, on v2.22 or later, `errors` (`cloud.report`; default: empty, which reports nothing until an administrator chooses in the web UI). A set value, `off` included, fixes the level and the web UI shows it read-only. See [Monitoring (Beta)](/overview/console-monitoring).
+- `DAGU_CLOUD_REMOTE_ACCESS` - Highest role a Dagu Cloud user gets on calls Dagu Cloud carries to this server: `off`, `viewer`, `operator`, or `developer` (`cloud.remote_access`; default: empty, which leaves the choice to an administrator in the web UI, where it starts at `off`). A set value fixes it.
+- `DAGU_CLOUD_REMOTE_APPROVALS` - Whether those calls, at `operator` or above, may approve, reject, or push back steps waiting for a person (`cloud.remote_approvals`; default: unset, which leaves the choice to the web UI, where it starts off). A set value fixes it.
 
 ### External Secrets
 - `DAGU_SECRETS_VAULT_ADDRESS` - Default Vault server address for the `vault` secret provider

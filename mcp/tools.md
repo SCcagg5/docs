@@ -6,7 +6,7 @@ Dagu intentionally exposes three MCP tools.
 |------|---------|
 | `dagu_read` | Read DAGs, Markdown Wiki pages, DAG runs, logs, list views, and Dagu MCP reference resources. |
 | `dagu_change` | Preview or apply DAG YAML and workspace-aware Wiki page changes. |
-| `dagu_execute` | Start, enqueue, retry, or stop DAG runs. |
+| `dagu_execute` | Start, enqueue, retry, or stop DAG runs, and approve, reject, or push back steps waiting for a person. |
 
 ## `dagu_read`
 
@@ -121,7 +121,7 @@ Read a child DAG run or one of its step logs by adding the child ID returned in 
 }
 ```
 
-Successful reads return a stable envelope with `target`, normalized `data`, built-in `references`, and `uri` when the result has a canonical resource URI. DAG and run lists include canonical URIs; run summaries include numeric and human-readable statuses; run details include step statuses, errors, log URIs, and child-run references.
+Successful reads return a stable envelope with `target`, normalized `data`, built-in `references`, and `uri` when the result has a canonical resource URI. DAG and run lists include canonical URIs; run summaries include numeric and human-readable statuses; run details include the current `attemptId`, step statuses, errors, log URIs, and child-run references.
 
 ## `dagu_change`
 
@@ -225,22 +225,26 @@ Delete a Wiki page or directory:
 
 ## `dagu_execute`
 
-Use `dagu_execute` for run control.
+Use `dagu_execute` for run control and for deciding steps that wait for a person.
 
 | Input | Values |
 |-------|--------|
-| `action` | `start`, `enqueue`, `retry`, or `stop` |
+| `action` | `start`, `enqueue`, `retry`, `stop`, `approve`, `reject`, or `push_back` |
 | `targetType` | `dag`, `inline_spec`, or `run`; inferred when omitted |
 | `name` | Required DAG name, including the identity used for an inline spec run |
 | `spec` | Inline DAG YAML for `start` or `enqueue` with `targetType=inline_spec` |
-| `dagRunId` | Run ID override for start/enqueue, or target run for retry/stop |
+| `dagRunId` | Run ID override for start/enqueue, or target run for the other actions |
 | `params` | Runtime parameters as a JSON object or JSON-encoded string |
 | `queue` | Queue override for `enqueue` |
 | `singleton` | Prevent duplicate running or queued runs for `start` and `enqueue` |
 | `noReuse` | Run eligible build steps instead of reusing prior materializations for `start` and `enqueue` |
 | `labels` | Labels as `key=value` or key-only strings for `start` and `enqueue` |
-| `stepName` | Optional step name for retry |
+| `stepName` | Optional step name for retry; required for `approve`, `reject`, and `push_back` as the waiting step to decide |
 | `includeDownstream` | With `stepName`, retry that step and every reachable descendant |
+| `subDAGRunId` | For step decisions, the sub-DAG run of `dagRunId` that owns the waiting step |
+| `inputs` | Object of values for `approve` and `push_back` |
+| `reason` | Optional reason for `reject` |
+| `attemptId` | For step decisions, the run's `attemptId` from the `dagu_read` result the decision is based on |
 | `wait` | Wait for the identified run to reach a terminal state or a waiting checkpoint |
 | `waitTimeoutSeconds` | Wait limit from 1 to 300 seconds; requires `wait` and defaults to 60 |
 
@@ -285,4 +289,33 @@ When a run can be identified, `dagu_execute` returns canonical resource links fo
 
 Tool errors use structured codes such as `invalid_tool_input`, `resource_not_found`, `conflict`, and `resource_unavailable`. When a stored DAG name is close to an existing name, `resource_not_found` may include suggestions under `details.didYouMean`.
 
-`dagu_execute` can start or enqueue a root DAG containing human tasks, locally or on a distributed worker, but it cannot complete or push back a waiting human task. Use the [Web UI](/writing-workflows/human-tasks#web-ui), [REST API](/web-ui/api#human-task-endpoints), or the local [`dagu human-task complete`](/getting-started/cli#human-task-complete) and [`dagu human-task push-back`](/getting-started/cli#human-task-push-back) commands. Human-task completion and push-back are not available through MCP, including `dagu_execute` retry or stop actions.
+### Deciding Waiting Steps
+
+When `dagu_read` with `target=run` lists a step as waiting with `approval` or `humanTask`, `approve`, `reject`, or `push_back` decides it. Read the run first and pass its `attemptId`:
+
+```json
+{
+  "action": "approve",
+  "name": "nightly-report",
+  "dagRunId": "20260522T010000",
+  "stepName": "publish_gate",
+  "inputs": {"TICKET": "CHG-42"},
+  "attemptId": "att-2",
+  "wait": true
+}
+```
+
+| Action | [Approval gate](/writing-workflows/approval) | [Human task](/writing-workflows/human-tasks) |
+|--------|---------------|------------|
+| `approve` | The step succeeds. `inputs` holds its input values, each a string. | Completes the task with `inputs` as its form values. Omit `inputs` for an acknowledgement-only task. |
+| `reject` | Rejects the step and the run, recording `reason`. | Not allowed. Human tasks cannot be rejected. |
+| `push_back` | Pushes the step back for re-execution with `inputs` as feedback, each a string. | Pushes the task back with `inputs` as its feedback. |
+
+- Human-task `inputs` are typed JSON values, as with `dagu human-task complete --inputs-json`.
+- Deciding requires permission to run DAGs in the run's workspace, as in the Web UI and REST API: `operator` or above. A decision resumes the run as those surfaces do.
+- When `attemptId` differs from the run's current attempt, the call fails with `conflict`, changes nothing, and reports the current attempt in `details.attemptId`. Read the run again before deciding.
+- A step that is not waiting fails with `conflict`. An unknown step fails with `resource_not_found`.
+- `reject` on a human task, a non-string approval input, a missing required approval input, and input the task's form refuses fail with `invalid_tool_input` and change nothing.
+- Without `wait`, the result includes `stepName` and the run's `status` and `statusLabel` observed after the decision.
+
+`attemptId` is optional on the server's own MCP endpoint. Calls from Dagu Cloud must pass it, and can decide steps only while the server allows [remote approvals](/overview/cloud-remote-access#approvals).

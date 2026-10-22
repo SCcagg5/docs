@@ -31,13 +31,21 @@ Dagu exposes a small tool surface by design:
 
 - `dagu_read` reads and searches DAGs and Wiki pages, inspects root and child runs, and reads logs and reference resources.
 - `dagu_change` previews or applies DAG definition upserts, renames, and deletions, plus workspace-aware Wiki page changes.
-- `dagu_execute` starts, enqueues, retries, or stops DAG runs and can wait for an identified run to finish.
+- `dagu_execute` starts, enqueues, retries, or stops DAG runs, approves, rejects, or pushes back steps waiting for a person, and can wait for an identified run to finish.
 
 This keeps client instructions stable and avoids exposing every REST endpoint as a separate MCP tool.
 
 The deprecated `dagu_create_doc` and `dagu_edit_doc` prompts forward to the Wiki prompts.
 
-The tool boundary does not include human-task completion or push-back. MCP can author and start a root DAG containing [`action: human.task`](/writing-workflows/human-tasks), locally or on a distributed worker, and it can read the resulting run state. Complete or push back a waiting task through the Web UI, REST API, or local `dagu human-task complete` and `dagu human-task push-back` commands. Human tasks are not supported in sub-DAGs.
+Step decisions go through the same REST handlers as the Web UI: the approval-gate handlers for a step with `approval`, and the human-task handlers for an [`action: human.task`](/writing-workflows/human-tasks) step. See [Deciding Waiting Steps](/mcp/tools#deciding-waiting-steps).
+
+## Calls From Dagu Cloud
+
+With [remote access](/overview/cloud-remote-access) on, AI apps connected to Dagu Cloud reach the same tools without the `/mcp` route. Each `dagu server` or `dagu start-all` process opens an outbound connection to Dagu Cloud, which carries each call to an MCP handler inside that process.
+
+- The handler serves `dagu_read`, `dagu_change`, and `dagu_execute` and calls the same API service as the `/mcp` route. It is stateless and offers no resource subscriptions.
+- Each call runs as the Dagu Cloud user, with the lower of the server's remote access level and the role Dagu Cloud grants that user.
+- Audit context records `transport=cloud_relay` and credential type `cloud`.
 
 ## Resource Boundary
 

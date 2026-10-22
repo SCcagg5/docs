@@ -30,12 +30,14 @@ MCP uses the same role and workspace model as Dagu users and API keys.
 | Role | MCP use |
 |------|---------|
 | `viewer` | Read DAGs, run state, logs, and reference resources. |
-| `operator` | Read state, start or enqueue runs, retry runs, and stop runs. |
+| `operator` | Read state, start or enqueue runs, retry runs, stop runs, and approve, reject, or push back waiting steps. |
 | `developer` | Create or edit DAG specs in addition to run control. |
 | `manager` | Workflow administration and audit/event visibility. |
 | `admin` | Full control, including API key management. |
 
 Workspace access limits are enforced through the same API service used by the Web UI and REST API. When an MCP request includes `?workspace=<name>`, Dagu records that workspace in audit context and applies the resolved access rules for the credential.
+
+Calls from Dagu Cloud use no API key. Each runs with the lower of the server's [remote access level](/overview/cloud-remote-access#levels) and the role Dagu Cloud grants the user.
 
 ## Attribution
 

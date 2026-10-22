@@ -93,7 +93,7 @@ Dagu sends a resource update notification when the run reaches a terminal state:
 Dagu also notifies when the run stops at a waiting checkpoint, and keeps
 watching the resource so the later terminal state is notified as well.
 
-Clients without resource subscription support should poll `dagu_read` with `target=run` and the same `name` and `dagRunId`.
+Clients without resource subscription support should poll `dagu_read` with `target=run` and the same `name` and `dagRunId`. Calls from Dagu Cloud under [remote access](/overview/cloud-remote-access) have no subscriptions; use `wait=true` or read the run again.
 
 ## MCP App Run Inspector
 

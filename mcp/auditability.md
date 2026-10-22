@@ -16,7 +16,7 @@ MCP audit entries use the `mcp` category and include MCP-specific fields when av
 | `resource_id` | Affected resource identifier, such as a DAG name, Wiki page path, `dagName/dagRunId`, or `dagName/dagRunId/stepName`. |
 | `workspace` | Canonical workspace used for audit filtering. |
 | `credential_id` | Accepted credential identifier, independent of the user or service-account subject. |
-| `credential_type` | Credential class such as `api_key`, `session`, `basic`, or `none`. |
+| `credential_type` | Credential class such as `api_key`, `session`, `basic`, `none`, or `cloud` for calls from Dagu Cloud. |
 | `mcp_tool` | MCP tool name, such as `dagu_read`, `dagu_change`, or `dagu_execute`. |
 
 ## Tool Call Events
@@ -33,6 +33,20 @@ Each MCP tool call records lifecycle events:
 
 Successful tool events can include additional outcome details such as `dag_run_id`, `run_uri`, `applied`, and `valid`.
 
+## Calls From Dagu Cloud
+
+Calls that Dagu Cloud carries under [remote access](/overview/cloud-remote-access) use credential type `cloud` and transport `cloud_relay`. Their details record:
+
+| Field | Meaning |
+|-------|---------|
+| `credential_id` | The connection the user made from an AI app |
+| `credential_name` | The AI app's name |
+| `subject_id` | `cloud:` followed by the Dagu Cloud user ID |
+| `subject_name` | The user's email |
+| `cloud_workspace` | The Dagu Cloud workspace the call came from |
+
+On a server with audit logs, the **Remote access** section of **Plan & features** lists the latest of these calls.
+
 ## Request And Subscription Events
 
 Authentication and subscription behavior is also auditable:
@@ -45,7 +59,7 @@ Authentication and subscription behavior is also auditable:
 
 ## Correlating With DAG Events
 
-MCP tools call the same internal API service used by the Web UI and REST API. When `dagu_change` applies a DAG or Wiki page update, or `dagu_execute` starts, enqueues, retries, or stops a run, the downstream domain audit event keeps the MCP source context. Wiki page mutations therefore produce both the MCP tool lifecycle events and the corresponding `doc_create`, `doc_update`, `doc_rename`, or `doc_delete` event without recording Markdown content.
+MCP tools call the same internal API service used by the Web UI and REST API. When `dagu_change` applies a DAG or Wiki page update, or `dagu_execute` starts, enqueues, retries, or stops a run or decides a waiting step, the downstream domain audit event keeps the MCP source context. Wiki page mutations therefore produce both the MCP tool lifecycle events and the corresponding `doc_create`, `doc_update`, `doc_rename`, or `doc_delete` event without recording Markdown content.
 
 Filter audit logs by:
 
@@ -53,4 +67,5 @@ Filter audit logs by:
 - `source=mcp` to see all activity originating from MCP, including downstream DAG events
 - `surface=mcp` to see activity accepted through the MCP credential surface
 - `mcp_tool=dagu_execute` or another tool name for tool-specific investigation
+- `credential_type=cloud` to see calls from Dagu Cloud
 - `correlation_id` to connect an MCP attempt with the downstream effects of that attempt

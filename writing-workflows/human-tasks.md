@@ -250,11 +250,15 @@ curl -X POST \
 
 Send `{}` for an acknowledgement-only task. See [Human Task Endpoints](/web-ui/api#human-task-endpoints) for responses and errors.
 
+### MCP
+
+Read the run with `dagu_read` `target=run`, then call [`dagu_execute`](/mcp/tools#deciding-waiting-steps) with `action=approve`, the task's step name as `stepName`, its form values as `inputs`, and the run's `attemptId`. `action=push_back` sends feedback the same way. A call for a task that is no longer waiting fails with `conflict`, even with the same input.
+
 ### Repeated and Conflicting Completions
 
 - Repeating a completion with the same input succeeds and changes nothing.
 - Completing an already completed task with different input fails with a conflict.
-- The completion records who completed the task: the authenticated user for the Web UI and REST API, or the OS username and an `os:<uid>` ID for the CLI.
+- The completion records who completed the task: the authenticated user for the Web UI, REST API, and MCP, or the OS username and an `os:<uid>` ID for the CLI.
 
 Human tasks have no reject operation. Stop the run if it should not continue, or [push the work back](#requesting-changes).
 
@@ -478,8 +482,6 @@ A human task cannot use fields that run or configure a process:
 Human tasks are not allowed inside `foreach.steps` or lifecycle handlers. A DAG with a human task fails when invoked as a child through `dag.run`, `dag.enqueue`, or `parallel`. `with.push_back` is not allowed in `type: agent` DAGs.
 
 `dagu dry` resolves the prompt and artifact paths and marks the task complete without waiting, so a workflow can be checked without input.
-
-MCP can author, start, and inspect runs that contain human tasks, but it cannot complete or push back a task.
 
 ## See Also
 

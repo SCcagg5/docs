@@ -103,6 +103,7 @@ const mcpItems = [
     collapsed: true,
     items: [
       { text: "Authentication", link: "/mcp/authentication" },
+      { text: "Remote Access from Dagu Cloud", link: "/overview/cloud-remote-access" },
       { text: "Auditability", link: "/mcp/auditability" },
     ],
   },
