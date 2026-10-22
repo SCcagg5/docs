@@ -76,6 +76,8 @@ Monitoring is off by default. Upgrading or connecting a server sends nothing bey
 
 Dagu also asks on its own. On a server that was connected without choosing a level, such as with a server key, administrators see a **Monitor this server from Dagu Console** notice above other pages until they choose a level or dismiss it.
 
+A server whose administrators chose **Health and run status** in the web UI before Dagu v2.22 offers error messages once, with a **Show why runs fail in Dagu Console** notice. **Send error messages** opens the dialog with **Health, run status, and error messages** selected. Choosing a level, cancelling the dialog, or dismissing the notice ends the offer. A server whose level is set in configuration never shows it.
+
 The choice applies at once, without a restart, and is kept in the data directory (`cloud/report-settings.json` under `paths.data_dir`). Persist that directory in containers, as you do for the [license](/overview/self-host-license#keep-the-server-s-identity).
 
 The **Monitoring** section on **Plan & features** shows:
@@ -122,6 +124,8 @@ Sent at `health`, `runs`, and `errors`:
 - Dagu version, operating system, and architecture
 - When the server process started
 - Which services run: the number of schedulers holding the scheduler lock, and the number of registered coordinators
+- The scheduler's last tick, and whether it is paused
+- The [remote access](/overview/cloud-remote-access) level, and whether remote approvals are on
 
 ### Run status
 
@@ -129,6 +133,19 @@ Sent at `runs` and `errors`:
 
 - **Each top-level run that finishes**, once: the DAG name, run ID, attempt ID, status (succeeded, partially succeeded, failed, aborted, or rejected), how it was triggered (scheduler, manual, webhook, retry, or catchup), when it was queued, started, and finished, and the names of its failed steps, up to 50.
 - **The runs in progress**: the runs queued, running, or waiting, with the same fields up to the start time. A report lists up to 200 of them, the most recently started or queued first, and the total count.
+- **Each scheduled DAG**: its name, its next run, and its latest start-schedule slot that came due, with the outcome below. A report lists up to 500 of them, those whose slot failed, is planned, or was missed first, and the total count. When several processes share a data directory, the one that sends runs sends these.
+
+| Slot outcome | Meaning |
+| --- | --- |
+| `dispatched` | A run was started or enqueued for the slot. |
+| `running` | Skipped because a run of the DAG was in progress. |
+| `queued` | Skipped because a run of the DAG was queued. |
+| `done` | Skipped because a run had already started at or after the slot. |
+| `succeeded` | Skipped by [`skip_if_successful`](/writing-workflows/scheduling#skip-redundant-runs) after a successful run. |
+| `overlap` | A catchup slot dropped by `overlap_policy`. |
+| `failed` | Checking or dispatching the run failed. |
+| `planned` | Chosen to run, with its dispatch not yet settled. |
+| `missed` | Came due while no scheduler ran, and was not caught up. |
 
 DAG names and step names are sent only at `runs` and `errors`. Choose `health` if you consider them sensitive.
 
@@ -144,9 +161,9 @@ Error messages often contain hosts, paths, or data a step printed, and masking c
 
 ### Never sent
 
-Full logs, outputs, parameters, environment, step commands, DAG YAML, and the values of workflow secrets are never sent, at any level. Error messages are sent only at `errors`.
+Full logs, outputs, parameters, environment, step commands, DAG YAML, schedule expressions, and the values of workflow secrets are never sent, at any level. Error messages are sent only at `errors`.
 
-Every report also carries what identifies and authenticates the server, as its license check-in does: the protocol version, license ID, server ID, and heartbeat secret. It also carries the level. At `runs` and `errors`, it also carries the reporter's position in the event store and, after events were lost, the time they were lost from.
+Every report also carries what identifies and authenticates the server, as its license check-in does: the protocol version, license ID, server ID, and heartbeat secret. It also carries the level and, at any level but `off`, the time the report was built by the server's clock. At `runs` and `errors`, it also carries the reporter's position in the event store and, after events were lost, the time they were lost from.
 
 [RFC 002: Dagu Cloud Connector](https://github.com/dagucloud/dagu/blob/main/rfcs/002-dagu-cloud-connector.md) specifies the wire contract.
 
@@ -196,6 +213,7 @@ To raise the limit, [contact the Dagu team](https://dagu.sh/contact).
 - [Console Pages](/overview/console-monitoring-pages)
 - [Connect a Server](/overview/self-host-license#connect-a-server)
 - [Public Webhook URLs](/server-admin/authentication/public-webhook-urls)
+- [Remote Access from Dagu Cloud](/overview/cloud-remote-access)
 - [Configuration Reference](/server-admin/reference)
 - [Notifications](/web-ui/notifications)
 - [Incident Routing](/web-ui/incidents)
