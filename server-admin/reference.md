@@ -24,6 +24,7 @@ check_updates: true       # Automatic web UI update checks (default: true)
 skip_examples: false       # Skip creating example DAGs
 metrics: "private"        # Metrics endpoint: "private" (default) or "public"
 cors_allowed_origins: []  # Empty disables cross-origin browser access (default)
+allowed_hosts: []         # Extra host names accepted with auth.mode none and at first-admin setup
 cache: "normal"            # Cache mode
 
 # HTTP client IP allowlist
@@ -337,6 +338,7 @@ All options support `DAGU_` prefix.
 - `DAGU_IP_ACCESS_TRUSTED_PROXIES` - Comma-separated proxy addresses and CIDR ranges permitted to supply forwarded client IP headers.
 - `DAGU_CACHE` - Cache mode (default: `normal`)
 - `DAGU_CORS_ALLOWED_ORIGINS` - Comma-separated origins allowed for cross-origin browser access (`cors_allowed_origins`; default: empty, which disables it). See [Cross-Origin Browser Access](/server-admin/server#cross-origin-browser-access).
+- `DAGU_ALLOWED_HOSTS` - Comma-separated host names accepted, beyond those always accepted, on every request with `auth.mode: none` and on first-admin setup (`allowed_hosts`; default: empty). An entry is an exact name, `.example.com` for a domain and its subdomains, or `*` to turn the check off. See [Allowed Host Names](/server-admin/server#allowed-host-names).
 
 ### Terminal
 - `DAGU_TERMINAL_ENABLED` - Enable web-based terminal (default: `false`)
@@ -849,6 +851,7 @@ peer:
 - `check_updates`: `true`
 - `metrics`: `private`
 - `cors_allowed_origins`: empty (cross-origin browser access disabled)
+- `allowed_hosts`: empty (only the always-accepted host names)
 - `ip_access.allowed_ips`: empty (HTTP client IP filtering disabled)
 - `ip_access.trusted_proxies`: empty (forwarded client IP headers are ignored)
 - `default_execution_mode`: `local`

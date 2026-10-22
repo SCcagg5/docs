@@ -10,7 +10,7 @@ Choose an authentication method for your Dagu instance.
 | [Builtin + OIDC](./oidc) | Users should sign in through an OpenID Connect provider. Self-hosted SSO requires an active license. |
 | [Builtin + proxy authentication](./proxy) | A reverse proxy authenticates users and is the only network path to Dagu. Self-hosted SSO requires an active license. |
 | [Basic](./basic) | A single shared account is enough and you do not need user management. |
-| `none` | Authentication is handled outside Dagu or the instance is isolated. |
+| `none` | Authentication is handled outside Dagu or the instance is isolated. Dagu still checks the request's host name; see [Allowed Host Names](/server-admin/server#allowed-host-names). |
 
 Builtin authentication is the default. On a new installation, create the first builtin administrator through `/setup` or
 `auth.builtin.initial_admin`. Dagu requires this administrator before it allows OIDC sign-in.

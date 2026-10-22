@@ -260,6 +260,7 @@ Common top-level settings include:
 config:
   publicUrl: https://dagu.example.com
   corsAllowedOrigins: []
+  allowedHosts: []
   ipAccess:
     allowedIPs: []
     trustedProxies: []
@@ -270,6 +271,19 @@ extraEnv: []
 ```
 
 `extraEnv` adds variables to every Dagu Deployment. `config.envPassthrough` and `config.envPassthroughPrefixes` control which pod environment variables Dagu forwards into workflow processes; they do not create those variables.
+
+### Allowed host names
+
+Where no login is needed, on every request with `auth.mode: none` and on first-admin setup, Dagu v2.22 or later answers `400 Bad Request` to host names it does not know. IP addresses, single-label names such as `dagu-ui`, cluster names under `.local` such as `dagu-ui.dagu.svc.cluster.local`, and the `config.publicUrl` host need no entry. The chart adds `ingress.host` when `ingress.enabled=true`. List any other name Dagu is reached under:
+
+```yaml
+config:
+  allowedHosts:
+    - dagu.example.com
+    - .corp.example.com # The domain and its subdomains
+```
+
+Shortened Service names that contain a dot, such as `dagu-ui.dagu` or `dagu-ui.dagu.svc`, are not accepted automatically; use the full `.svc.cluster.local` name or list them. See [Allowed Host Names](/server-admin/server#allowed-host-names) for every name accepted and for `["*"]`.
 
 ### IP access allowlist
 

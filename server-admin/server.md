@@ -41,6 +41,7 @@ headless: false           # Run without Web UI
 check_updates: true       # Automatic web UI update checks (default: true)
 metrics: "private"        # Metrics endpoint access: "private" (default) or "public"
 cors_allowed_origins: []  # Empty disables cross-origin browser access (default)
+allowed_hosts: []         # Extra host names accepted where no login is needed (see Allowed Host Names)
 
 # Restrict HTTP access by client IP address (empty allowed_ips disables filtering)
 ip_access:
@@ -196,6 +197,7 @@ All options support `DAGU_` prefix:
 - `DAGU_CHECK_UPDATES` - Enable automatic web UI update checks (default: `true`)
 - `DAGU_SERVER_METRICS` - Metrics endpoint access: `private` (default) or `public`
 - `DAGU_CORS_ALLOWED_ORIGINS` - Comma-separated list of allowed CORS origins (e.g. `https://app.example.com,https://other.example.com`). An empty value disables cross-origin browser access. An explicit `*` allows any origin without credentials and emits a security warning.
+- `DAGU_ALLOWED_HOSTS` - Comma-separated host names accepted where no login is needed (e.g. `dagu.example.com,.corp.example.com`). See [Allowed Host Names](#allowed-host-names).
 - `DAGU_IP_ACCESS_ALLOWED_IPS` - Comma-separated IPv4/IPv6 addresses and CIDR ranges allowed to access the HTTP server. An empty value disables filtering.
 - `DAGU_IP_ACCESS_TRUSTED_PROXIES` - Comma-separated proxy addresses and CIDR ranges permitted to supply forwarded client IP headers.
 
@@ -272,6 +274,35 @@ cors_allowed_origins:
 ```
 
 Wildcard access does not allow credentials and emits a security warning at startup. With `auth.mode: none`, any website can execute workflows through the browser, so use the wildcard only when that exposure is intentional. The initial builtin-auth setup endpoint (`/api/v1/auth/setup`) never accepts cross-origin requests, including when the wildcard is configured.
+
+## Allowed Host Names
+
+Where no login is needed, Dagu checks the host name in each request's `Host` header. The check covers every route when `auth.mode: none`, and the first-admin setup endpoint (`/api/v1/auth/setup`) in every mode. A request for any other host name gets `400 Bad Request` with the message `host "<name>" is not allowed; add it to allowed_hosts or set public_url`. This blocks DNS rebinding, where a web page points its own domain at the Dagu server so that the browser sends the page's requests to Dagu as same-origin requests.
+
+Dagu always accepts:
+
+- IP addresses
+- Single-label names, such as `localhost` or `dagu`
+- Names under the special-use domains `localhost`, `local`, `internal`, `test`, `example`, `invalid`, `alt`, `home.arpa`, and `service.arpa`, such as `dagu.local` or `dagu.dagu.svc.cluster.local`
+- The configured `host` and the `public_url` host
+- The machine's hostname
+- The name of a connected [Tailscale tunnel](/server-admin/tunnel)
+
+List any other name Dagu is reached under:
+
+```yaml
+allowed_hosts:
+  - dagu.example.com
+  - .corp.example.com   # The domain and its subdomains
+```
+
+An entry is an exact name, or a domain with a leading dot, which matches the domain and every subdomain. Matching ignores case and port. Behind a reverse proxy, the check reads the `Host` header the proxy sends to Dagu; a proxy that forwards the original `Host`, such as nginx with `proxy_set_header Host $host`, needs that name listed or set as `public_url`.
+
+`"*"` accepts every host name and turns the check off. Dagu logs a warning at startup. Any website can then use a visitor's browser to reach first-admin setup on a fresh install and, with `auth.mode: none`, to run workflows. Use it only when no browser can reach Dagu.
+
+::: warning Upgrading to v2.22
+A server with `auth.mode: none` that is reached through a DNS name outside the list above, such as `dagu.example.com` or `dagu.lan`, answers every request with `400 Bad Request` until the name is added to `allowed_hosts` or set as `public_url`. In other auth modes, only first-admin setup is checked.
+:::
 
 ## IP Access Allowlist
 
