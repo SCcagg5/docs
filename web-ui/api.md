@@ -4364,6 +4364,33 @@ All endpoints returning workspace data use this shape:
 | `createdAt` | string (date-time) | UTC creation timestamp |
 | `updatedAt` | string (date-time) | UTC last-update timestamp |
 
+### List Workspace Settings Removed in v3.0
+
+**Endpoint**: `GET /api/v1/workspaces/deprecation`
+
+Lists the workspace settings in use that stop applying when workspaces are removed in v3.0. Requires admin role.
+
+**Query Parameters**:
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+| remoteNode | string | Remote node name | "local" |
+
+**Response (200)**:
+```json
+{
+  "items": [
+    { "kind": "baseConfig", "name": "billing" },
+    { "kind": "secret", "name": "database/password (workspace billing)" },
+    { "kind": "configKey", "name": "auth.oidc.role_mapping.workspace_mappings" },
+    { "kind": "user", "name": "alice" }
+  ]
+}
+```
+
+Items are ordered by kind, then name. `kind` is one of `baseConfig`, `secret`, `profileEntry`, `notificationRoute`, `incidentPolicy`, `configKey`, `user`, `apiKey`, or `wikiDirectory`. `name` identifies the setting, such as a workspace, a secret and its workspace, or a username. Returns an empty array when no workspace settings are in use.
+
+See [Workspaces](/web-ui/workspaces#removal-in-v3-0) for when each kind is reported.
+
 ## Remote Node Support
 
 Most endpoints support the `remoteNode` query parameter for multi-environment setups:

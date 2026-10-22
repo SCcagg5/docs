@@ -1,5 +1,9 @@
 # Workspaces
 
+::: warning Workspaces Are Removed in v3.0
+Workspace settings stop applying in v3.0, and users and API keys limited to selected workspaces become viewers. See [Removal in v3.0](#removal-in-v3-0) for the settings Dagu reports. Leave feedback on [issue #3288](https://github.com/dagucloud/dagu/issues/3288).
+:::
+
 Workspaces organize workflows and runs inside one Dagu installation. Use them to separate workflows by team, business function, product, or operational responsibility, such as `finance`, `data-platform`, `customer-support`, or `platform-ops`.
 
 Workspaces can also scope access, Wiki pages, managed secrets, profile defaults, notifications, and incident routing.
@@ -178,6 +182,23 @@ Dagu rejects the deletion while Wiki pages remain in the workspace. This keeps t
 
 After deletion, update affected DAG labels and access grants so future work stays easy to find.
 
+## Removal in v3.0
+
+When the web server starts, it logs one warning, `Workspaces are removed in v3.0, and these workspace settings will stop applying`, with a `settings` attribute that lists every workspace setting still in use:
+
+| Setting | Reported When |
+| --- | --- |
+| Base config | `<paths.dags_dir>/workspaces/<workspace>/base.yaml` has content. |
+| Secret | A Dagu-managed secret belongs to a named workspace. |
+| Profile entry | A workspace profile default has entries. |
+| Notification route | A workspace configures its own notification routes instead of inheriting Global. |
+| Incident policy | A workspace configures its own incident routing instead of inheriting Global. |
+| Config key | `auth.oidc.role_mapping` or `auth.proxy.role_mapping` sets `workspace_mappings` or `default_workspace_access`. |
+| User or API key | Access is limited to selected workspaces. |
+| Wiki directory | A DAG in a named workspace has a per-DAG Wiki directory at `<paths.wiki_dir>/<workspace>/<dag>`. |
+
+Admins see the same list behind a warning icon in the left navigation. The notice links to the feedback issue. **Dismiss** hides the icon in that browser until another setting comes into use. Neither the warning nor the icon appears when no workspace settings are in use.
+
 ## API Access
 
 Most users manage workspaces from the Web UI. Automation can use the REST API when needed:
@@ -188,6 +209,7 @@ Most users manage workspaces from the Web UI. Automation can use the REST API wh
 | Create a workspace | `POST /api/v1/workspaces` |
 | Rename or update a workspace | `PATCH /api/v1/workspaces/{workspaceId}` |
 | Delete a workspace | `DELETE /api/v1/workspaces/{workspaceId}` |
+| List workspace settings removed in v3.0 (admin) | `GET /api/v1/workspaces/deprecation` |
 
 For request and response details, see [REST API](/web-ui/api).
 
