@@ -163,9 +163,12 @@ DAG: my-workflow
 The variables are set only when OpenTelemetry is enabled for the DAG.
 A `TRACEPARENT` or `TRACESTATE` that the step sets in its own `env`, or in
 the `env` of its container, takes precedence, and Dagu then sets neither
-variable. Set `TRACEPARENT` to an empty value in the step `env` to give the
-process no trace context. A `TRACEPARENT` from the DAG-level `env` is
-replaced by the step span. Lifecycle handlers do not receive these variables.
+variable; an inherited value of the other one becomes empty. Set
+`TRACEPARENT` to an empty value in the step `env` to give the process no
+trace context. A `TRACEPARENT` from the DAG-level `env` is replaced by the
+step span, and an inherited `TRACESTATE` becomes empty when the step span has
+none, because it belongs to another span. Lifecycle handlers do not receive
+these variables.
 
 ## Using Base Configuration
 
