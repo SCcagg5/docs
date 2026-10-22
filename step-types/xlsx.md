@@ -1,4 +1,3 @@
-| `quote.xlsx Sheet1: the listing of Sheet1!A1:H600 is 412 KB, more than 200 KB; set range to the part of the sheet that holds the fields` | The listing of the sheet is too long to fit a model context. | Set `range` to the area of the form. |
 ---
 description: Read, write, validate, and convert .xlsx workbooks with the xlsx actions, fill templates, manage sheets, and write results back to the rows they came from, without a spreadsheet application.
 ---
@@ -142,7 +141,7 @@ Without `range`, the data block is detected: leading empty rows and columns are 
 | Error such as `#N/A` | `null`, with a warning naming the cell. |
 | Empty | `null`. Trailing rows whose cells are all empty are dropped unless `keep_empty_rows: true`. |
 
-`types` pins columns to `string`, `number`, `integer`, `boolean`, `date`, or `datetime`. A cell that cannot convert fails the step naming the cell, as `orders.xlsx Orders!D17: expected number, found "N/A"`; with `on_type_error: warn` it becomes `null` with a warning instead.
+`types` pins columns to `string`, `number`, `integer`, `boolean`, `date`, or `datetime`. A cell that cannot convert fails the step naming the cell, as `orders.xlsx Orders!D17: expected number, found "N/A"`. With `on_type_error: warn` (also spelled `null`) it becomes `null` with a warning instead. With `on_type_error: keep` it keeps the value it was read as, such as the text `"N/A"`, with the same warning, so a reader can show a person what to fix.
 
 ### Filtering and Limits
 
@@ -187,6 +186,7 @@ steps:
 - `style: table` (default) gives a new or replaced sheet a bold header on a light fill, frozen panes below it, fitted column widths, and number formats by column: dates `yyyy-mm-dd`, decimals with two places, text `@`. `style: none` writes bare cells.
 - `xlsx.append`, and `mode: append`, write below the last used row with no header, and each new cell copies the style of the cell above it, so a date column stays a date column. An append that starts an empty sheet writes the header, so the first run creates the table.
 - Appended fields are matched to the header row by exact name: a name the header has only loosely, differing in case or spacing, fails with `column "amount" not found in header row 1; did you mean "Amount"?`; a name the header lacks adds a column at the right, counted in `columns_added`; header columns no field carries stay empty. Array rows have no names and are written by position. `header: false` says the sheet has no header row: rows are written by position, and an empty sheet gets no header.
+- With `output`, `xlsx.append` writes the result to that workbook and leaves the one at `path` as it was; a `path` that does not exist starts a new workbook at `output`. An existing `output` is replaced, not appended to, so an append with a fixed `output` inside a `foreach` keeps only the last iteration's rows. `output` follows the rules of [`xlsx.write_cells`](#filling-a-template). `xlsx.write` takes no `output`, also with `mode: append`.
 
 A CSV `input` takes `encoding` (`utf-8`, the default, `utf-8-bom`, or `shift_jis`) and `delimiter`, one character:
 
@@ -229,6 +229,18 @@ Two checks run before any cell is written, and either failure leaves the workboo
 
 1. The key column and every `set` column that already exists must still be in the header row by exact name. A header that matches only ignoring case or spacing is reported with `did you mean "Status"?`.
 2. A row carrying `_row` must still hold its key at that row. A sheet that was sorted or had rows inserted since it was read fails with `expected key "INV-17", found "INV-18"; the sheet changed since it was read`.
+
+With `output`, the updated workbook is written to that file and the workbook at `path` is left as it was, so one workbook serves many updates. `output` follows the rules of [`xlsx.write_cells`](#filling-a-template), and an existing `output` is replaced:
+
+```yaml
+with:
+  path: orders.xlsx
+  output: out/orders-marked.xlsx
+  key: order_id
+  rows: ${RESULTS}
+  set:
+    Status: status
+```
 
 ## Validating a Workbook
 
@@ -308,7 +320,7 @@ with:
 - An address is a cell such as `B2`, `Sheet1!B2`, or `'My Sheet'!B2`, or a defined name that refers to one cell. An address without a sheet uses `sheet`, the first sheet by default. A range, a named range, or a table is refused, and so are two addresses that name the same cell, such as `B3` and `$B$3`.
 - An ISO date string becomes a date, and text in the canonical form of a number, `100` or `-12.5` but not `007`, `1,234`, or `1e3`, becomes a number, so `${foreach.item.amount}`, which arrives as text, lands as a number a formula can use; `{value: "100", type: string}` keeps such text as text.
 - Every cell keeps its style, and a date written into a plain cell gains a date format. A cell that already holds the value, or the formula, is not a change.
-- The workbook must exist, since a template fill needs a template; `xlsx.write` creates workbooks. With `output`, the result is written to that file and the workbook at `path` is left as it was, so one template serves many fills. `output` must be a different file from `path`.
+- The workbook must exist, since a template fill needs a template; `xlsx.write` creates workbooks. With `output`, the result is written to that file and the workbook at `path` is left as it was, so one template serves many fills. `output` must be an `.xlsx` or `.xlsm` workbook and a different file from `path`, and a missing parent folder of `output` is created.
 - `changes` reports `cells_changed`, `rows_updated` as the distinct rows a changed cell was on, and `sheet` and `range` as the bounding box of the cells changed on the default sheet. With `output`, the `path` and `artifact` outputs name the file written.
 
 Fill one invoice per order and keep the copies with the run:
@@ -516,7 +528,7 @@ A field that still holds a reference to a step output is skipped, since no step 
 | `trim` | `read`, `validate`, `convert` | Trim text cells. |
 | `formulas` | `read`, `validate`, `convert` | `cached`, `text`, or `calculate`. |
 | `types` | `read`, `write`, `append`, `validate`, `convert` | Column types: `string`, `number`, `integer`, `boolean`, `date`, `datetime`. |
-| `on_type_error` | `read` | `fail` (default) or `warn`. |
+| `on_type_error` | `read` | `fail` (default), `warn` (also spelled `null`), or `keep`. |
 | `where` | `read` | Row filter. |
 | `max_rows` | `read` | Most rows to read. Defaults to `5000`. |
 | `stop_at_blank`, `keep_empty_rows` | `read` | Stop at the first empty row; keep trailing empty rows. |
@@ -534,7 +546,7 @@ A field that still holds a reference to a step output is skipped, since no step 
 | `max_problems` | `validate` | Problems to keep in `problems`. Defaults to `1000`. |
 | `cells` | `write_cells` | Addresses and what they receive. Required. |
 | `merge` | `write_cells` | Ranges to merge before the cells are written, such as `[A1:D1]`. |
-| `output` | `write_cells`, `convert` | The file to write; for `write_cells`, a copy of the template. Required for `convert`. |
+| `output` | `write_cells`, `update_rows`, `append`, `convert` | The file to write. For `write_cells`, `update_rows`, and `append`, a workbook that receives the result while `path` is left as it was. Required for `convert`. |
 | `operation` | `sheet` | `add`, `copy`, `rename`, or `delete`. Required. |
 | `to` | `sheet` | The new name for `copy` and `rename`. |
 | `if_exists` | `sheet` | `fail`, `skip`, or `replace`. |
@@ -568,10 +580,13 @@ A field that still holds a reference to a step output is skipped, since no step 
 | `template.xlsx: "A1:B2" is not a single cell` | A `cells` address names a range, a named range, or a table. | Address one cell. |
 | `report.xlsx: sheet "October" already exists` | The sheet `add`, `copy`, or `rename` would create exists and `if_exists` is `fail`. | Set `if_exists: skip` for a rerun, or `replace`. |
 | `report.xlsx: cannot delete the only sheet "Sheet1"` | A workbook needs one sheet. | Add the replacement sheet first. |
+| `orders.xlsx: output must be a different file from path; leave output out to update the workbook in place` | `output` of `update_rows` names the workbook at `path`; `write_cells` and `append` report the same, ending with `to fill` or `to append to`. | Name another file, or leave `output` out to change the workbook in place. |
+| `with.output is not valid for xlsx.write` | `xlsx.write` takes no `output`, also with `mode: append`. | Use `xlsx.append` with `output` to append to a copy. |
 | `xlsx actions have fixed outputs` | The step declares `output:` or `outputs:`. | Remove it; read the published names instead. |
 | `artifact requires artifact storage` | `artifact: true` in a DAG whose artifacts are disabled. | Enable `artifacts` or drop the field. |
 | `xlsx.extract needs a model: set llm at the DAG level or with.llm on the step` | No model is configured for the extract step. | Add an `llm` block to the DAG or `with.llm` to the step. |
 | `quote.xlsx Sheet1: 2415 cells in Sheet1!A1:H600 is more than 2000; set range to the part of the sheet that holds the fields` | The sheet has too many non-empty cells to list for the model. | Set `range` to the area of the form. |
+| `quote.xlsx Sheet1: the listing of Sheet1!A1:H600 is 412 KB, more than 200 KB; set range to the part of the sheet that holds the fields` | The listing of the sheet is too long to fit a model context. | Set `range` to the area of the form. |
 | `template.xlsx: merge A1:D1 overlaps merged cell Sheet1!B1:E1` | The range to merge crosses a merged region that is already there. | Merge a range that lies beside it, or unmerge the region in Excel first. |
 | `template.xlsx: merge B10:D10 would discard the value of Sheet1!C10; clear it first` | A cell under the range, other than its top-left, holds something that the merge would drop. | Clear the cell with `write_cells` (`C10: null`) in an earlier step, or move the value to the top-left cell. |
 | `xlsx: model answered field "total" with "H40", which is outside Sheet1!A1:D20` | The model named a cell outside the listed sheet or range. | Widen `range`, or improve the instruction and descriptions. |

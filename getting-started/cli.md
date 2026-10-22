@@ -952,13 +952,21 @@ Use `-` as `<path>` to read the workbook from standard input, up to 64 MiB. Larg
 - `--range` - Cell range, `Sheet!A2:F` reference, named range, or table name
 - `--header` - `true` (default), `false`, a row number, or rows such as `3,4`
 - `--columns` - Columns to keep, comma-separated, with optional `name:alias` renames
+- `--types` - Column types to pin, as comma-separated `name:type` pairs or a JSON object when a name holds a comma; a type is `string`, `number`, `integer`, `boolean`, `date`, or `datetime`, converted as [`types`](/step-types/xlsx#how-cells-become-values) converts them
+- `--on-type-error` - What a cell that does not convert to its pinned type does: `fail` (default) fails the read, `warn` (also spelled `null`) reads it as null, and `keep` keeps the value as read; `warn` and `keep` add a warning
 - `--max-rows` - Most rows to print (default: 5000)
+- `--skip-hidden` - Leave out rows hidden by a filter or by hand
+- `--password` - Password of a protected workbook; `DAGU_XLSX_PASSWORD` supplies it when the flag is omitted
 - `--format`, `-f` - Output format: `text` (default) or `json`
+
+Prefer `DAGU_XLSX_PASSWORD` on a shared host: a `--password` value is visible in the process list and kept in shell history. The flag wins when both are set.
 
 ```bash
 dagu xlsx read orders.xlsx
 dagu xlsx read orders.xlsx --sheet Orders --range A2:F --header false
 dagu xlsx read orders.xlsx --columns "Invoice No,Amount" --format json
+dagu xlsx read orders.xlsx --types "Amount:number,Due:date" --on-type-error keep
+dagu xlsx read orders.xlsx --skip-hidden
 cat orders.xlsx | dagu xlsx read - --sheet Orders --format json
 ```
 
