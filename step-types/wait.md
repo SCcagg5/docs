@@ -103,7 +103,7 @@ Network errors, connection refusals, and non-matching statuses are treated as "n
 | `state` | string | `exists` | `wait.file` | `exists` or `missing`. |
 | `url` | string | none | `wait.http` | Absolute HTTP URL. |
 | `method` | string | `GET` | `wait.http` | HTTP method. |
-| `status` | integer | `200` | `wait.http` | Expected HTTP status code. |
+| `status` | integer or string | `200` | `wait.http` | Expected HTTP status code. |
 | `headers` | map | none | `wait.http` | HTTP request headers. |
 | `body` | string | none | `wait.http` | HTTP request body. |
 | `poll_interval` | string | `1s` | `wait.file`, `wait.http` | Interval between readiness checks. |
@@ -113,6 +113,17 @@ Use the step-level `timeout_sec` field to set an overall maximum wait time.
 
 ## Value References
 
-`path`, `method`, `headers`, and `body` accept [value references](/writing-workflows/template-variables), such as `${params.name}` or a previous step's output, and resolve when the step starts.
+Every field accepts [value references](/writing-workflows/template-variables), such as `${params.deadline}`, `${env.BASE_URL}/health`, or a previous step's output. References resolve when the step starts.
 
-`duration`, `until`, `url`, `state`, `status`, `poll_interval`, and `request_timeout` are validated as written when the DAG is built, before references resolve. A reference such as `until: ${params.deadline}` is rejected before the DAG runs.
+A literal value is validated when the DAG is built. A value that contains a `${...}` or `$VAR` reference is validated after it resolves, when the step starts, so a bad resolved value fails the step instead of the DAG build. If the reference did not resolve, the error says so. Escape a literal `$` as `\$`.
+
+```yaml
+params:
+  - deadline: "2030-01-02T03:04:05Z"
+
+steps:
+  - id: wait_for_deadline
+    action: wait.until
+    with:
+      until: ${params.deadline}
+```
