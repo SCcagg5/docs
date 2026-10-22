@@ -414,7 +414,7 @@ curl -X POST "http://localhost:8080/api/v1/services/scheduler/pause" \
 
 Pausing requires the admin role, because it affects every workspace. Any authenticated user can read the state, and while the scheduler is paused a banner appears on every page showing who paused it and why.
 
-The flag is stored under `data_dir` at `scheduler/paused.json`, so it survives a restart. A paused scheduler stays paused until someone resumes it.
+The flag is stored under `data_dir` at `scheduler/paused.json`, so it survives a restart. A paused scheduler stays paused until someone resumes it. The exception is a pause the scheduler places on itself after the host wakes, which also ends on its own; see [Wake hold](#wake-hold).
 
 ### What a pause changes
 
@@ -431,7 +431,7 @@ The scheduler process keeps running. Queue processing, zombie detection, and not
 
 ### What is discarded
 
-Two kinds of work are dropped rather than deferred. Both match how per-DAG suspension already behaves, but a pause applies them to every DAG at once.
+Two kinds of work are dropped rather than deferred. Both match how per-DAG suspension already behaves, but a pause applies them to every DAG at once. A [wake hold](#wake-hold) drops neither.
 
 **Queued scheduled runs are aborted.** A run that the scheduler had already queued is marked `Aborted` with the reason `dag schedule suspended before dispatch` and removed from its queue.
 
@@ -448,6 +448,22 @@ If missed runs matter more than a clean freeze, suspend the specific DAGs instea
 ### After resuming
 
 Scheduling picks up from the next tick. Slots that fell inside the paused window are not backfilled. While paused, `NEXT_RUN` reads `-` in `dagu ls` and the next-run column is empty in the web UI.
+
+### Wake hold
+
+After the host wakes from sleep, the scheduler's first tick fires the slot of that minute and every one-off schedule whose time has passed, before anything that manages the DAG definitions can update them. `scheduler.wake_hold` makes the scheduler wait instead:
+
+```yaml
+# ~/.config/dagu/config.yaml
+scheduler:
+  wake_hold: "5m"   # Default: "0", never hold
+```
+
+When a tick comes more than a minute late, as it does after a sleep, the scheduler pauses itself. The pause shows `scheduler` as the actor in the API and the banner, and no schedule tick runs while it lasts. The hold ends when the pause is cleared from **System Status** or with the resume request above, or when `wake_hold` has passed, whichever comes first. The held ticks then run in order, starting from the minute the host woke. Slots the host slept through are replayed only within a DAG's [catchup window](#catchup-missed-run-replay), as after any missed tick.
+
+A wake hold is not an operator's pause. Queued runs and automatic retries go on, no queued run is aborted, and no catchup window is erased. If the scheduler is already paused when the host wakes, no hold starts and that pause governs. Pausing the scheduler during a hold replaces the hold with an ordinary pause. A scheduler restart clears a hold left behind.
+
+`DAGU_SCHEDULER_WAKE_HOLD` sets the same value; see the [configuration reference](/server-admin/reference#scheduler).
 
 ## Queue Management
 
