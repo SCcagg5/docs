@@ -46,7 +46,11 @@ The upgrade command automatically detects how Dagu was installed:
 | Go install | No | Reinstall with the script installer or a released binary |
 | Homebrew | No | `brew upgrade dagu` |
 | Snap | No | `snap refresh dagu` |
-| Docker | No | Pull latest image |
+| Container (Docker, Podman, Kubernetes) | No | Pull the latest image |
+
+Dagu treats an install as a container when `/.dockerenv` or `/run/.containerenv` exists, or when `KUBERNETES_SERVICE_HOST` is set.
+
+If the install directory is not writable, the command fails with a permission error that suggests running with `sudo`, or as Administrator on Windows.
 
 ## How It Works
 
@@ -55,6 +59,25 @@ The upgrade command automatically detects how Dagu was installed:
 3. **Verification**: Validates SHA256 checksum
 4. **Backup** (optional): Creates `.bak` file of current binary
 5. **Installation**: Atomically replaces the binary
+6. **Restart Hint**: Prints how to restart Dagu so running processes use the new binary
+
+## Restarting After an Upgrade
+
+`dagu upgrade` does not restart running Dagu processes, because a restart can stop running workflows. After a successful upgrade, it prints the restart command for the background service the Dagu installer set up:
+
+```
+Restart Dagu to use the new version:
+  sudo systemctl restart dagu
+```
+
+| Service | Detected By | Command |
+|---------|-------------|---------|
+| macOS launchd agent | `~/Library/LaunchAgents/local.dagu.server.plist` | `launchctl kickstart -k gui/$(id -u)/local.dagu.server` |
+| Linux systemd system service | `/etc/systemd/system/dagu.service` | `sudo systemctl restart dagu` |
+| Linux systemd user service | `~/.config/systemd/user/dagu.service` | `systemctl --user restart dagu` |
+| Windows service | `dagu-service.xml` next to the binary | `Restart-Service Dagu` |
+
+When no installer service is found, it prints `Restart any running Dagu processes to use the new version.`
 
 ## Supported Platforms
 
@@ -64,7 +87,9 @@ The upgrade command automatically detects how Dagu was installed:
 
 ## Update Notifications
 
-Dagu caches update check results for 24 hours. When automatic checks are enabled, an available update appears as a notification in the web UI.
+Dagu caches update check results for 24 hours. When automatic checks are enabled, an available update appears as a notification in the web UI. The notification shows the update command for the detected installation method, such as `dagu upgrade` or `brew upgrade dagu`. Container installs show no command.
+
+When the binary a running server started from is replaced, by `dagu upgrade` or a package manager, the web UI shows a restart notice instead, with the restart command from [Restarting After an Upgrade](#restarting-after-an-upgrade) when one is found.
 
 Automatic checks are controlled by the main server config and are enabled by default:
 
@@ -74,7 +99,7 @@ check_updates: true
 
 Disable them with `check_updates: false` or `DAGU_CHECK_UPDATES=false`.
 
-This only affects automatic web UI notifications. Manual commands such as `dagu upgrade` and `dagu upgrade --check` still work.
+This only affects update notifications in the web UI. Restart notices and manual commands such as `dagu upgrade` and `dagu upgrade --check` still work.
 
 ## Examples
 

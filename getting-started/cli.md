@@ -1140,7 +1140,7 @@ dagu upgrade --version vX.Y.Z
 dagu upgrade --dry-run
 ```
 
-Use `--yes` to skip prompts in automation. Self-upgrade is unavailable for package-manager or container installs such as Homebrew, Snap, `go install`, and Docker.
+Use `--yes` to skip prompts in automation. Self-upgrade is unavailable for package-manager or container installs such as Homebrew, Snap, `go install`, Docker, Podman, and Kubernetes. After a successful upgrade, the command prints how to restart running Dagu processes; see [Restarting After an Upgrade](/server-admin/self-upgrade#restarting-after-an-upgrade).
 
 ### `license`
 
