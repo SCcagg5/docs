@@ -1237,7 +1237,7 @@ Pull changes from remote repository.
 dagu sync pull
 ```
 
-Reports how many items were synchronized and how many unchanged local supporting files were removed after a remote deletion. Locally edited files remain as conflicts.
+Reports how many items were synchronized and how many unchanged local DAGs, Wiki pages, attachments, and supporting files were removed after a remote deletion. Locally edited items remain as conflicts; untracked items are left alone.
 
 #### `sync publish`
 

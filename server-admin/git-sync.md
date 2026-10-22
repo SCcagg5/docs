@@ -172,15 +172,16 @@ A typical update follows this sequence:
 | `synced` | Local content matches the last synchronized version. |
 | `modified` | A tracked local file changed. |
 | `untracked` | A local DAG, Wiki page, or Wiki attachment has not been published. New local supporting files are not discovered. |
-| `conflict` | Local and remote content both changed, or a locally edited supporting file was deleted remotely. |
+| `conflict` | Local and remote content both changed, or a locally changed tracked item was deleted remotely. |
 | `missing` | A previously tracked local file is gone. |
 
 ### Pull and remote deletion
 
-Pulling preserves local edits. If the remote repository deletes a supporting file:
+Pulling preserves local edits. If the remote repository deletes a tracked DAG, Wiki page, Wiki attachment, or supporting file:
 
-- An unchanged local copy is removed.
+- An unchanged local copy is removed, along with any directories the removal leaves empty.
 - A locally edited copy remains and becomes a conflict.
+- An `untracked` item is left alone.
 - Discarding that deletion conflict removes the local copy.
 - Force publishing the conflict restores the local file to the repository.
 
